@@ -102,7 +102,11 @@ show_results(SQL_STATEMENT *rs, unsigned int cols)
 		{
 			putchar(' ');
 			len = sql_stmt_value(rs, c, fbuf, max + 1);
-			if(len == (size_t) - 1 || len == 1)
+			/* if len is ((size_t) -1), an error occurred; if len = 0, there
+			 * is no value to retrieve; otherwise, the length includes the
+			 * terminating NULL byte.
+			 */
+			if(len == (size_t) - 1 || len == 0)
 			{
 				len = 0;
 			}
