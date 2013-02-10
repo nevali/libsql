@@ -13,11 +13,27 @@ dnl  See the License for the specific language governing permissions and
 dnl  limitations under the License.
 dnl
 AC_DEFUN([LIBSQL_CHECK_LIBEDIT],[
-AC_CONFIG_SUBDIRS([libedit])
-AM_CPPFLAGS="$AM_CPPFLAGS -I\${top_builddir}/libedit/src -I\${top_srcdir}/libedit/src"
-LIBEDIT_LIBS="\${top_builddir}/libedit/src/libedit.la"
-LIBEDIT_SUBDIRS="libedit"
-AC_SUBST([AM_CPPFLAGS])
+have_libedit=no
+local_libedit=no
+test -d libedit && local_libedit=auto
+AC_ARG_WITH([included_libedit],[AS_HELP_STRING([--with-included-libedit],[build and install the included libedit (default=auto)])],,[with_included_libedit=$local_libedit])
+
+if test x"$with_included_libedit" = x"no" || test x"$with_included_libedit" = x"auto" ; then
+	AC_CHECK_LIB([edit],[el_init],[with_included_libedit=no ; have_libedit=yes ; LIBEDIT_LIBS="-ledit"],[
+		if test x"$with_included_libedit" = x"no" ; then
+			AC_MSG_ERROR([could not find a suitable libedit installation])
+		fi
+	])
+fi
+
+if test x"$with_included_libedit" = x"yes" || test x"$with_included_libedit" = x"auto" ; then
+	AC_CONFIG_SUBDIRS([libedit])
+	have_libedit=yes
+	AM_CPPFLAGS="$AM_CPPFLAGS -I\${top_builddir}/libedit/src -I\${top_srcdir}/libedit/src"
+	LIBEDIT_LIBS="\${top_builddir}/libedit/src/libedit.la"
+	LIBEDIT_SUBDIRS="libedit"
+	AC_SUBST([AM_CPPFLAGS])
+fi
 AC_SUBST([LIBEDIT_LIBS])
 AC_SUBST([LIBEDIT_SUBDIRS])
 ])dnl
