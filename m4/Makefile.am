@@ -1,4 +1,4 @@
-## Copyright 2012 Mo McRoberts.
+## Copyright 2012-2013 Mo McRoberts.
 ##
 ##  Licensed under the Apache License, Version 2.0 (the "License");
 ##  you may not use this file except in compliance with the License.
@@ -12,4 +12,6 @@
 ##  See the License for the specific language governing permissions and
 ##  limitations under the License.
 
-EXTRA_DIST = uriparser.m4 doc.m4 nls.m4 cc.m4
+EXTRA_DIST = \
+	doc.m4 nls.m4 cc.m4 libedit.m4 liburi.m4 mysql.m4 prefix.m4 \
+	libtool.m4 lt~obsolete.m4 ltoptions.m4 ltsugar.m4 ltversion.m4
