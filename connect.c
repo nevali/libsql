@@ -31,6 +31,7 @@ sql_connect(const char *uristring)
 	uri = uri_create_str(uristring, NULL);
 	if(!uri)
 	{
+		sql_set_error_("08000", "Failed to parse connection URI");
 		return NULL;
 	}
 	conn = sql_connect_uri(uri);
@@ -47,17 +48,19 @@ sql_connect_uri(URI *uri)
 	
 	engine = sql_engine_(uri);
 	if(!engine)
-	{
+	{		
 		return NULL;
 	}
 	conn = engine->api->create(engine);
 	if(!conn)
 	{
+		sql_set_error_("53000", "The client engine failed to create a connection object");
 		return NULL;
 	}
 	if(conn->api->connect(conn, uri))
 	{
 		/* Save error state */
+		sql_set_error_(conn->api->sqlstate(conn), conn->api->error(conn));
 		conn->api->free(conn);
 		return NULL;
 	}

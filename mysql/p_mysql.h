@@ -37,6 +37,8 @@ struct sql_struct
 {
 	SQL_API *api;
 	MYSQL mysql;
+	char sqlstate[6];
+	char error[512];
 };
 
 struct sql_statement_struct
@@ -62,7 +64,12 @@ struct sql_field_struct
 
 SQL *sql_engine_mysql_create_(SQL_ENGINE *me);
 
+void sql_mysql_set_error_(SQL *restrict me, const char *restrict sqlstate, const char *restrict message);
+void sql_mysql_copy_error_(SQL *me);
+
 int sql_mysql_free_(SQL *me);
+const char *sql_mysql_sqlstate_(SQL *me);
+const char *sql_mysql_error_(SQL *me);
 int sql_mysql_connect_(SQL *restrict me, URI *restrict uri);
 int sql_mysql_execute_(SQL *restrict me, const char *restrict statement, void *restrict *restrict resultdata);
 SQL_STATEMENT *sql_mysql_statement_(SQL *restrict me, const char *restrict statement);

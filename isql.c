@@ -25,6 +25,34 @@
 #include "histedit.h"
 #include "libsql.h"
 
+#ifndef EXIT_FAILURE
+# define EXIT_FAILURE                  1
+#endif
+
+static const char *short_program_name, *connect_uri;
+
+static void
+check_args(int argc, char **argv)
+{
+	char *t;
+	
+	t = strrchr(argv[0], '/');
+	if(t)
+	{
+		short_program_name = t + 1;
+	}
+	else
+	{
+		short_program_name = t;
+	}
+	if(argc != 2)
+	{
+		fprintf(stderr, "Usage: %s URI\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+	connect_uri = argv[1];
+}
+
 static char *
 prompt(EditLine *el)
 {
@@ -172,13 +200,14 @@ main(int argc, char **argv)
 	int num;
 	unsigned int cols;
 
-	if(argc != 2)
+	check_args(argc, argv);
+	conn = sql_connect(connect_uri);
+	if(!conn)
 	{
-		fprintf(stderr, "Usage: %s URI\n", argv[0]);
-		return 1;
+		fprintf(stderr, "%s: [%s] %s\n", short_program_name, sql_sqlstate(NULL), sql_error(NULL));
+		exit(EXIT_FAILURE);
 	}
 	fprintf(stderr, "%s interactive SQL shell (%s)\n\n", PACKAGE, VERSION);
-	conn = sql_connect(argv[1]);
 	hist = history_init();
 	el = el_init(argv[0], stdin, stdout, stderr);
 	el_set(el, EL_SIGNAL, 1);
@@ -196,7 +225,7 @@ main(int argc, char **argv)
 		rs = sql_query(conn, buf);
 		if(!rs)
 		{
-			fprintf(stderr, "error -- no results\n");
+			printf("[%s] %s\n", sql_sqlstate(conn), sql_error(conn));
 			continue;
 		}
 		cols = sql_stmt_columns(rs);

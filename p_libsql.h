@@ -39,6 +39,7 @@
 
 SQL_ENGINE *sql_engine_(URI *uri);
 
+void sql_set_error_(const char *sqlstate, const char *msg);
 int sql_vasprintf_query_(char **ptr, const char *format_string, va_list vargs);
 
 #endif

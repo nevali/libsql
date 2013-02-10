@@ -29,6 +29,7 @@ sql_mysql_execute_(SQL *restrict me, const char *restrict statement, void *restr
 	r = mysql_query(&(me->mysql), statement);
 	if(r)
 	{
+		sql_mysql_copy_error_(me);
 		return -1;
 	}
 	if(resultdata)
@@ -39,6 +40,7 @@ sql_mysql_execute_(SQL *restrict me, const char *restrict statement, void *restr
 			res = mysql_store_result(&(me->mysql));
 			if(!res)
 			{
+				sql_mysql_copy_error_(me);
 				return -1;
 			}
 			*resultdata = res;

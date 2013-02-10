@@ -32,19 +32,19 @@ sql_engine_(URI *uri)
 	r = uri_scheme(uri, scheme, sizeof(scheme));
 	if(r == (size_t) -1)
 	{
-		fprintf(stderr, "failed to obtain scheme from URI: %s\n", strerror(errno));
+		sql_set_error_("53000", "Failed to obtain scheme from parsed URI");
 		return NULL;
 	}
 	if(r >= sizeof(scheme))
 	{
-		fprintf(stderr, "failed to obtain engine from URI: no such scheme exists\n");
+		sql_set_error_("08000", "The specified URI scheme is not supported by any client engine");
 		return NULL;
 	}
 	if(!strcmp(scheme, "mysql") || !strcmp(scheme, "mysqls"))
 	{
 		return sql_mysql_engine();
 	}
-	fprintf(stderr, "failed to obtain engine from URI: scheme '%s' is not registered\n", scheme);
+	sql_set_error_("08000", "The specified URI scheme is not supported by any client engine");
 	return NULL;
 }
 

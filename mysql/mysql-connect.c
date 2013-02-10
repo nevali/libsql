@@ -20,6 +20,10 @@
 
 #include "p_mysql.h"
 
+/* TODO:
+ *   percent-decode components
+ *   connection options
+ */
 int
 sql_mysql_connect_(SQL *me, URI *uri)
 {
@@ -61,7 +65,7 @@ sql_mysql_connect_(SQL *me, URI *uri)
 	uri_info_destroy(info);
 	if(!res)
 	{
-		fprintf(stderr, "mysql: failed to connect to database\n");
+		sql_mysql_copy_error_(me);
 		return -1;
 	}
 	sql_mysql_execute_(me, "SET NAMES 'utf'", NULL);
@@ -71,3 +75,36 @@ sql_mysql_connect_(SQL *me, URI *uri)
 	return 0;
 }
 
+const char *
+sql_mysql_sqlstate_(SQL *me)
+{
+	return me->sqlstate;
+}
+
+const char *
+sql_mysql_error_(SQL *me)
+{
+	return me->error;
+}
+
+void
+sql_mysql_set_error_(SQL *restrict me, const char *restrict sqlstate, const char *restrict message)
+{
+	strncpy(me->sqlstate, sqlstate, sizeof(me->sqlstate) - 1);
+	if(!message)
+	{
+		message = sqlstate;
+	}
+	strncpy(me->error, message, sizeof(me->error) - 1);
+}
+
+void
+sql_mysql_copy_error_(SQL *me)
+{
+	const char *sqlstate;
+	const char *err;
+	
+	sqlstate = mysql_sqlstate(&(me->mysql));
+	err = mysql_error(&(me->mysql));
+	sql_mysql_set_error_(me, sqlstate, err);
+}

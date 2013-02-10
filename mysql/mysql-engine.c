@@ -37,6 +37,8 @@ static SQL_API mysql_api = {
 	NULL,
 	NULL,
 	sql_mysql_free_,
+	sql_mysql_sqlstate_,
+	sql_mysql_error_,
 	sql_mysql_connect_,
 	sql_mysql_execute_,
 	sql_mysql_statement_
@@ -75,6 +77,8 @@ sql_engine_mysql_create_(SQL_ENGINE *me)
 		return NULL;
 	}
 	inst->api = &mysql_api;
+	strcpy(inst->sqlstate, "0000");
+	strcpy(inst->error, "No error");
 	res = mysql_init(&(inst->mysql));
 	if(!res)
 	{

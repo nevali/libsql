@@ -36,6 +36,9 @@ extern "C" {
 	SQL *sql_connect_uri(URI *uri);
 	int sql_disconnect(SQL *sql);
 
+	const char *sql_sqlstate(SQL *connection);
+	const char *sql_error(SQL *connection);
+
 	/* Execute a statement not expected to return a result-set */
 	int sql_execute(SQL *restrict sql, const char *restrict statement);
 	int sql_executef(SQL *restrict sql, const char *restrict statement, ...);

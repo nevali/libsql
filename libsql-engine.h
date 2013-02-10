@@ -41,6 +41,8 @@ struct sql_api_struct
 	void *reserved1;
 	void *reserved2;
 	int (*free)(SQL *me);
+	const char *(*sqlstate)(SQL *me);
+	const char *(*error)(SQL *me);
 	int (*connect)(SQL *restrict me, URI *restrict uri);
 	int (*execute)(SQL *restrict me, const char *restrict statement, void *restrict *restrict data);
 	SQL_STATEMENT *(*statement)(SQL *restrict me, const char *restrict statement);
