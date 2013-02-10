@@ -15,9 +15,9 @@ dnl
 AC_DEFUN([LIBSQL_CHECK_LIBURI],[
 AC_CONFIG_SUBDIRS([liburi])
 AM_CPPFLAGS="$AM_CPPFLAGS -I\${top_builddir}/liburi -I\${top_srcdir}/liburi"
-LIBS="$LIBS \${top_builddir}/liburi/liburi.la"
+LOCAL_LIBS="$LOCAL_LIBS \${top_builddir}/liburi/liburi.la"
 LIBURI_SUBDIRS="liburi"
 AC_SUBST([AM_CPPFLAGS])
-AC_SUBST([LIBS])
+AC_SUBST([LOCAL_LIBS])
 AC_SUBST([LIBURI_SUBDIRS])
 ])dnl

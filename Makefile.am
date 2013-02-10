@@ -31,7 +31,7 @@ noinst_HEADERS = libsql-engine.h
 libsql_la_SOURCES = p_libsql.h \
 	engine.c connect.c statement.c field.c vasprintf.c
 
-libsql_la_LIBADD = mysql/libmysql-engine.la
+libsql_la_LIBADD = mysql/libmysql-engine.la @LOCAL_LIBS@
 libsql_la_LDFLAGS = -avoid-version
 
 isql_SOURCES = isql.c
