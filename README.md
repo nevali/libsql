@@ -4,8 +4,7 @@ Abstraction layer for talking to SQL servers (and SQLite 3).
 
 You will need git, automake, autoconf and libtool. You'll also need a
 DocBook 5 and DocBook-XSL toolchain (i.e., xsltproc and the stylesheets)
-if you wish to rebuild the documentation. Both liburi and uriparser have
-minimal external dependencies.
+if you wish to rebuild any documentation.
 
     $ git clone git://github.com/nevali/libsql.git
     $ cd libsql
@@ -29,12 +28,14 @@ maintained 1995-present by Christos Zoulas and others.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
-1. Redistributions of source code must retain the above copyright
-   notice immediately at the beginning of the file, without modification,
-   this list of conditions, and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright
-   notice, this list of conditions and the following disclaimer in the
-   documentation and/or other materials provided with the distribution.
+
+* Redistributions of source code must retain the above copyright
+  notice immediately at the beginning of the file, without modification,
+  this list of conditions, and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -51,3 +52,6 @@ SUCH DAMAGE.
 The included liburi is licensed under the Apache License, Version 2.0, and
 incorporates uriparser, which is licensed under the terms of the
 [New BSD license](http://uriparser.git.sourceforge.net/git/gitweb.cgi?p=uriparser/uriparser;a=blob;f=COPYING).
+
+The included [libedit](http://www.thrysoee.dk/editline/) is licensed under
+the terms of the [New BSD license](http://www.netbsd.org/about/redistribution.html).
