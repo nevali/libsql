@@ -28,8 +28,22 @@
 #ifndef EXIT_FAILURE
 # define EXIT_FAILURE                  1
 #endif
+	 
+#define QUERY_BLOCK                    128
+#define PQUERY_BLOCK                   4
+	 
+struct query_struct
+{
+	char *query;
+	int output_mode;
+};
 
 static const char *short_program_name, *connect_uri;
+static int query_state = 0;
+static char *query_buf;
+static size_t query_len, query_alloc;
+static struct query_struct *pqueries;
+static size_t pquery_count, pquery_alloc;
 
 static void
 check_args(int argc, char **argv)
@@ -47,7 +61,7 @@ check_args(int argc, char **argv)
 	}
 	if(argc != 2)
 	{
-		fprintf(stderr, "Usage: %s URI\n", argv[0]);
+		fprintf(stderr, "Usage: %s URI\n", short_program_name);
 		exit(EXIT_FAILURE);
 	}
 	connect_uri = argv[1];
@@ -58,20 +72,33 @@ prompt(EditLine *el)
 {
 	(void) el;
 
-	return "SQL> ";
+	switch(query_state)
+	{
+	case 0:
+		return "SQL> ";
+	case '\'':
+		return "  '> ";
+	case '"':
+		return "  \"> ";
+	}
+	return "  -> ";
 }
 
 static int
-show_results(SQL_STATEMENT *rs, unsigned int cols)
+show_results(SQL_STATEMENT *rs)
 {
 	size_t d, max, len;
 	size_t *widths;
-	unsigned int c;
+	unsigned int cols, c;
 	SQL_FIELD **fields;
 	const char *n;
-	unsigned long long rows;
 	char *fbuf;
 	
+	cols = sql_stmt_columns(rs);
+	if(!cols)
+	{
+		return 0;
+	}
 	fbuf = NULL;
 	max = 0;
 	fields = (SQL_FIELD **) calloc(cols, sizeof(SQL_FIELD *));
@@ -169,15 +196,6 @@ show_results(SQL_STATEMENT *rs, unsigned int cols)
 		putchar('+');
 	}
 	putchar('\n');
-	rows = sql_stmt_rows(rs);
-	if(rows == 1)
-	{
-		printf("1 row in set.\n");
-	}
-	else
-	{
-		printf("%qu rows in set.\n", rows);
-	}
 	for(c = 0; c < cols; c++)
 	{
 		sql_field_destroy(fields[c]);
@@ -188,18 +206,332 @@ show_results(SQL_STATEMENT *rs, unsigned int cols)
 	return 0;
 }
 
+static int
+show_results_long(SQL_STATEMENT *rs)
+{
+	unsigned int cols, c;
+	unsigned long long row;
+	size_t max, w, len, maxname;
+	SQL_FIELD **fields;
+	char *fbuf;
+	const char *n;
+	char fmt[64];
+	
+	cols = sql_stmt_columns(rs);
+	if(!cols)
+	{
+		return 0;
+	}
+	fields = (SQL_FIELD **) calloc(cols, sizeof(SQL_FIELD *));
+	max = 0;
+	maxname = 0;
+	for(c = 0; c < cols; c++)
+	{
+		fields[c] = sql_stmt_field(rs, c);
+		w = sql_field_width(fields[c]);
+		if(w > max)
+		{
+			max = w;
+		}
+		n = sql_field_name(fields[c]);
+		w = strlen(n);
+		if(w > maxname)
+		{
+			maxname = w;
+		}
+	}
+	if(maxname)
+	{
+		sprintf(fmt, "%%%us: ", (unsigned) maxname);
+	}
+	else
+	{
+		strcpy(fmt, "%s: ");
+	}
+	fbuf = (char *) malloc(max + 1);
+	row = 0;
+	while(!sql_stmt_eof(rs))
+	{
+		row++;
+		printf("*************************** %qu. row ***************************\n", row);
+		for(c = 0; c < cols; c++)
+		{
+			len = sql_stmt_value(rs, c, fbuf, max + 1);			
+			printf(fmt, sql_field_name(fields[c]));
+			if(len == (size_t) - 1)
+			{
+				len = 0;
+			}
+			for(w = 0; w < len; w++)
+			{
+				putchar(fbuf[w]);
+			}
+			putchar('\n');
+		}
+		sql_stmt_next(rs);
+	}
+	for(c = 0; c < cols; c++)
+	{
+		sql_field_destroy(fields[c]);
+	}
+	free(fbuf);
+	free(fields);
+	return 0;
+}
+
+static int
+add_query(char *query, int output_mode)
+{
+	struct query_struct *p;
+	
+	if(pquery_count + 1 > pquery_alloc)
+	{
+		pquery_alloc += PQUERY_BLOCK;
+		p = (struct query_struct *) realloc(pqueries, sizeof(struct query_struct) * pquery_alloc);
+		if(!p)
+		{
+			fprintf(stderr, "%s: failed to allocate %u bytes for queries\n", short_program_name, (unsigned) (sizeof(struct query_struct) * pquery_alloc));
+			exit(EXIT_FAILURE);
+		}
+		pqueries = p;
+	}
+	pqueries[pquery_count].query = query;
+	pqueries[pquery_count].output_mode = output_mode;
+	pquery_count++;
+	return 0;
+}
+
+static int
+parse_query(const char *buf)
+{
+	size_t l;
+	char *p, *qs;
+	
+	pquery_count = 0;
+	if(buf)
+	{
+		l = strlen(buf);
+		if(l + query_len + 1 > query_alloc)
+		{
+			query_alloc = (((query_len + l + 1) / QUERY_BLOCK) + 1) * QUERY_BLOCK;
+			p = (char *) realloc(query_buf, query_alloc);
+			if(!p)
+			{
+				fprintf(stderr, "%s: failed to allocate %u bytes for query buffer\n", short_program_name, (unsigned) query_alloc);
+				exit(EXIT_FAILURE);
+			}
+			query_buf = p;		
+		}
+		p = &(query_buf[query_len]);
+		strcpy(p, buf);
+		query_len += l;
+	}
+	p = query_buf;
+	query_state = 0;
+
+	/* The state-keeping algorithm is fairly simplistic; although it only
+	 * needs to care about quoting, it should (and doesn't yet) handle
+	 * nesting properly, which is why it doesn't attempt to deal with
+	 * parentheses at all.
+	 */
+	while(*p)
+	{
+		switch(query_state)
+		{
+		case 0:
+			if(isspace(*p) || *p == '\r' || *p == '\n')
+			{
+				p++;
+				break;
+			}
+			qs = p;
+			switch(*p)
+			{
+				case '\'':
+				case '"':
+					query_state = *p;
+					break;
+				case '\\':
+					if(p[1] == 'g' || p[1] == 'G')
+					{
+						p++;
+						break;
+					}
+					qs = p;
+					query_state = 2;					
+					break;
+				case ';':
+					break;
+				default:
+					query_state = 1;
+					break;
+			}
+			p++;
+			break;
+		case 1:
+			if(*p == ';')
+			{
+				add_query(qs, *p);
+				*p = 0;
+				query_state = 0;
+				p++;
+				break;
+			}
+			if(p[0] == '\\' && p[1] == 'g')
+			{
+				add_query(qs, p[1]);
+				*p = 0;
+				query_state = 0;
+				p += 2;
+				break;
+			}
+			if(p[0] == '\\' && p[1] == 'G')
+			{
+				add_query(qs, p[1]);
+				*p = 0;
+				query_state = 0;
+				p += 2;
+				break;
+			}
+			switch(*p)
+			{
+				case '\'':
+				case '"':
+				case '`':
+				case '{':
+				case '[':
+					query_state = *p;
+					break;
+			}
+			p++;
+			break;
+		case 2:
+			/* Built-in commands */
+			p++;
+			break;
+		case '\'':
+		case '"':
+		case '`':
+			if(*p == query_state)
+			{
+				query_state = 1;
+			}
+			p++;
+			break;
+		case '{':
+			if(*p == '}')
+			{
+				query_state = 1;
+			}
+			p++;
+			break;
+		case '[':
+			if(*p == ']')
+			{
+				query_state = 1;
+			}
+			p++;
+			break;
+		}
+	}
+	if(query_state == 2)
+	{
+		/* Trim any trailing whitespace before adding to the query list */
+		p--;
+		while(p > qs)
+		{
+			if(!isspace(*p) && *p != '\r' && *p != '\n')
+			{
+				break;
+			}
+			*p = 0;
+			p--;
+		}
+		add_query(qs, 0);
+		query_state = 0;
+	}
+	if(!query_state)
+	{
+		query_len = 0;
+	}
+	return query_state;
+}
+
+static int
+exec_builtin(SQL *conn, History *hist, char *query)
+{
+	(void) conn;
+	(void) hist;
+	
+	if(!strncmp(query, "\\q", 2))
+	{
+		exit(EXIT_SUCCESS);
+	}
+	printf("[42000] Unknown command '%s'\n", query);
+	return -1;
+}
+
+static int
+exec_queries(SQL *conn, History *hist)
+{
+	HistEvent ev;
+	size_t c;
+	SQL_STATEMENT *rs;
+	unsigned int cols;
+	unsigned long long rows;
+	
+	for(c = 0; c < pquery_count; c++)
+	{
+		history(hist, &ev, H_ADD, pqueries[c].query);
+		if(pqueries[c].query[0] == '\\')
+		{
+			exec_builtin(conn, hist, pqueries[c].query);
+			continue;
+		}
+		rs = sql_query(conn, pqueries[c].query);
+		if(!rs)
+		{
+			printf("[%s] %s\n", sql_sqlstate(conn), sql_error(conn));
+			return -1;
+		}
+		cols = sql_stmt_columns(rs);
+		if(!cols)
+		{
+			printf("%qu rows affected.\n", sql_stmt_affected(rs));
+			sql_stmt_destroy(rs);
+			return 0;
+		}
+		if(pqueries[c].output_mode == 'G')
+		{
+			show_results_long(rs);
+		}
+		else
+		{
+			show_results(rs);
+		}
+		rows = sql_stmt_rows(rs);
+		if(rows == 1)
+		{
+			printf("1 row in set.\n");
+		}
+		else
+		{
+			printf("%qu rows in set.\n", rows);
+		}		
+		sql_stmt_destroy(rs);
+	}
+	return 0;
+}
+
 int
 main(int argc, char **argv)
 {
 	SQL *conn;
-	SQL_STATEMENT *rs;
 	EditLine *el;
 	History *hist;
 	const char *buf;
-	char *t;
-	int num;
-	unsigned int cols;
-
+	int num, state;
+	
 	check_args(argc, argv);
 	conn = sql_connect(connect_uri);
 	if(!conn)
@@ -208,35 +540,26 @@ main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	fprintf(stderr, "%s interactive SQL shell (%s)\n\n", PACKAGE, VERSION);
+	fprintf(stderr, 
+		"Type:  \\g or ; to execute query\n"
+		"       \\G to execute the query showing results in long format\n"
+		"       \\q to end the SQL session\n"
+		"\n"
+		);
 	hist = history_init();
 	el = el_init(argv[0], stdin, stdout, stderr);
+	el_set(el, EL_EDITOR, "emacs");
 	el_set(el, EL_SIGNAL, 1);
 	el_set(el, EL_PROMPT_ESC, prompt);
 	el_set(el, EL_HIST, history, hist);
 	el_source(el, NULL);
 	while((buf = el_gets(el, &num)) != NULL && num != 0)
 	{
-		t = strchr(buf, '\n');
-		if(t)
+		state = parse_query(buf);
+		if(state == 0)
 		{
-			*t = 0;
+			exec_queries(conn, hist);
 		}
-		fprintf(stderr, "[%s]\n", buf);
-		rs = sql_query(conn, buf);
-		if(!rs)
-		{
-			printf("[%s] %s\n", sql_sqlstate(conn), sql_error(conn));
-			continue;
-		}
-		cols = sql_stmt_columns(rs);
-		if(!cols)
-		{
-			printf("%qu rows affected.\n", sql_stmt_affected(rs));
-			sql_stmt_destroy(rs);
-			continue;
-		}
-		show_results(rs, cols);
-		sql_stmt_destroy(rs);
 	}
 	return 0;
 }
