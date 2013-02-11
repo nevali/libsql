@@ -60,6 +60,7 @@ struct sql_statement_api_struct
 	unsigned long long (*rows)(SQL_STATEMENT *me);
 	unsigned long long (*affected)(SQL_STATEMENT *me);
 	SQL_FIELD *(*field)(SQL_STATEMENT *restrict me, unsigned int col);
+	int (*null)(SQL_STATEMENT *me, unsigned int col);
 	size_t (*value)(SQL_STATEMENT *restrict me, unsigned int col, char *restrict buf, size_t buflen);
 	size_t (*valuelen)(SQL_STATEMENT *me, unsigned int col);
 	int (*eof)(SQL_STATEMENT *me);

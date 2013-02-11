@@ -68,6 +68,7 @@ extern "C" {
 	unsigned long long sql_stmt_affected(SQL_STATEMENT *statement);
 	unsigned long long sql_stmt_cur(SQL_STATEMENT *statement);
 	SQL_FIELD *sql_stmt_field(SQL_STATEMENT *statement, unsigned int col);	
+	int sql_stmt_null(SQL_STATEMENT *statement, unsigned int col);
 	size_t sql_stmt_value(SQL_STATEMENT *restrict statement, unsigned int col, char *restrict buf, size_t buflen);
 	
 	/* Return the name of a column */

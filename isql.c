@@ -123,6 +123,10 @@ show_results(SQL_STATEMENT *rs)
 		}
 		putchar('+');
 	}
+	if(max < 4)
+	{
+		max = 4;
+	}
 	fbuf = (char *) malloc(max + 1);
 	putchar('\n');
 	putchar('|');
@@ -156,18 +160,26 @@ show_results(SQL_STATEMENT *rs)
 		for(c = 0; c < cols; c++)
 		{
 			putchar(' ');
-			len = sql_stmt_value(rs, c, fbuf, max + 1);
-			/* if len is ((size_t) -1), an error occurred; if len = 0, there
-			 * is no value to retrieve; otherwise, the length includes the
-			 * terminating NULL byte.
-			 */
-			if(len == (size_t) - 1 || len == 0)
+			if(sql_stmt_null(rs, c))
 			{
-				len = 0;
+				strcpy(fbuf, "NULL");
+				len = 4;
 			}
 			else
 			{
-				len--;
+				len = sql_stmt_value(rs, c, fbuf, max + 1);
+				/* if len is ((size_t) -1), an error occurred; if len = 0, there
+				 * is no value to retrieve; otherwise, the length includes the
+				 * terminating NULL byte.
+				 */
+				if(len == (size_t) - 1 || len == 0)
+				{
+					len = 0;
+				}
+				else
+				{
+					len--;
+				}
 			}
 			for(d = 0; d < widths[c]; d++)
 			{
@@ -256,17 +268,24 @@ show_results_long(SQL_STATEMENT *rs)
 		printf("*************************** %qu. row ***************************\n", row);
 		for(c = 0; c < cols; c++)
 		{
-			len = sql_stmt_value(rs, c, fbuf, max + 1);			
 			printf(fmt, sql_field_name(fields[c]));
-			if(len == (size_t) - 1)
+			if(sql_stmt_null(rs, c))
 			{
-				len = 0;
+				puts("NULL");
 			}
-			for(w = 0; w < len; w++)
+			else
 			{
-				putchar(fbuf[w]);
+				len = sql_stmt_value(rs, c, fbuf, max + 1);			
+				if(len == (size_t) - 1)
+				{
+					len = 0;
+				}
+				for(w = 0; w < len; w++)
+				{
+					putchar(fbuf[w]);
+				}
+				putchar('\n');
 			}
-			putchar('\n');
 		}
 		sql_stmt_next(rs);
 	}

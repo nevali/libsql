@@ -30,6 +30,7 @@ static SQL_STATEMENT_API mysql_statement_api = {
 	sql_statement_mysql_rows_,
 	sql_statement_mysql_affected_,
 	sql_statement_mysql_field_,
+	sql_statement_mysql_null_,
 	sql_statement_mysql_value_,
 	sql_statement_mysql_valuelen_,
 	sql_statement_mysql_eof_,
@@ -196,6 +197,21 @@ sql_statement_mysql_value_(SQL_STATEMENT *restrict me, unsigned int col, char *r
 		buf[l] = 0;
 	}
 	return me->lengths[col] + 1;
+}
+
+/* Return 1 if the specified column in the current row is NULL */
+int
+sql_statement_mysql_null_(SQL_STATEMENT *me, unsigned int col)
+{
+	if(!me->row || col >= me->columns)
+	{
+		return 1;
+	}
+	if(!me->row[col])
+	{
+		return 1;
+	}
+	return 0;
 }
 
 /* Retrieve the length of the data in a column in the current row, including terminating NULL */

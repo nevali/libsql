@@ -92,6 +92,12 @@ sql_stmt_next(SQL_STATEMENT *stmt)
 	return stmt->api->next(stmt);
 }
 
+int
+sql_stmt_null(SQL_STATEMENT *stmt, unsigned int col)
+{
+	return stmt->api->null(stmt, col);
+}
+
 size_t
 sql_stmt_value(SQL_STATEMENT *restrict stmt, unsigned int col, char *restrict buf, size_t buflen)
 {

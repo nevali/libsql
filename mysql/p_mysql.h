@@ -83,6 +83,7 @@ unsigned long long sql_statement_mysql_affected_(SQL_STATEMENT *me);
 int sql_statement_mysql_eof_(SQL_STATEMENT *me);
 int sql_statement_mysql_next_(SQL_STATEMENT *me);
 SQL_FIELD *sql_statement_mysql_field_(SQL_STATEMENT *me, unsigned int col);
+int sql_statement_mysql_null_(SQL_STATEMENT *me, unsigned int col);
 size_t sql_statement_mysql_value_(SQL_STATEMENT *restrict me, unsigned int col, char *restrict buf, size_t buflen);
 size_t sql_statement_mysql_valuelen_(SQL_STATEMENT *me, unsigned int col);
 unsigned long long sql_statement_mysql_cur_(SQL_STATEMENT *me);
