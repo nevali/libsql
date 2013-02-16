@@ -14,7 +14,6 @@
 
 noinst_LTLIBRARIES = libmysql-engine.la
 
-libmysql_engine_la_LDFLAGS = -static
 libmysql_engine_la_CPPFLAGS = @AM_CPPFLAGS@ @MYSQL_CPPFLAGS@
 libmysql_engine_la_LIBADD = @MYSQL_LIBS@
 
