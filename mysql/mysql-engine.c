@@ -27,9 +27,9 @@ static pthread_once_t engine_control = PTHREAD_ONCE_INIT;
 static SQL_ENGINE *engine;
 
 static SQL_ENGINE_API mysql_engine_api = {
-	NULL,
-	NULL,
-	NULL,
+	sql_engine_def_queryinterface_,
+	sql_engine_def_addref_,
+	sql_engine_def_release_,
 	sql_engine_mysql_create_
 };
 
@@ -37,6 +37,10 @@ static SQL_API mysql_api = {
 	NULL,
 	NULL,
 	sql_mysql_free_,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 	sql_mysql_sqlstate_,
 	sql_mysql_error_,
 	sql_mysql_connect_,
@@ -61,6 +65,7 @@ engine_alloc(void)
 		return;
 	}
 	engine->api = &mysql_engine_api;
+	engine->refcount = 1;
 }
 
 SQL *
@@ -77,6 +82,7 @@ sql_engine_mysql_create_(SQL_ENGINE *me)
 		return NULL;
 	}
 	inst->api = &mysql_api;
+	inst->refcount = 1;
 	strcpy(inst->sqlstate, "0000");
 	strcpy(inst->error, "No error");
 	res = mysql_init(&(inst->mysql));
@@ -88,9 +94,14 @@ sql_engine_mysql_create_(SQL_ENGINE *me)
 	return inst;
 }
 
-int
+unsigned long
 sql_mysql_free_(SQL *me)
 {
+	me->refcount--;
+	if(me->refcount)
+	{
+		return me->refcount;
+	}
 	mysql_close(&(me->mysql));
 	free(me);
 	return 0;

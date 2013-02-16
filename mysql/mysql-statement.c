@@ -32,6 +32,7 @@ static SQL_STATEMENT_API mysql_statement_api = {
 	sql_statement_mysql_field_,
 	sql_statement_mysql_null_,
 	sql_statement_mysql_value_,
+	sql_statement_mysql_valueptr_,
 	sql_statement_mysql_valuelen_,
 	sql_statement_mysql_eof_,
 	sql_statement_mysql_next_,
@@ -52,6 +53,7 @@ sql_mysql_statement_(SQL *restrict me, const char *restrict statement)
 		return NULL;
 	}
 	p->api = &mysql_statement_api;
+	p->refcount = 1;
 	p->sql = me;
 	p->cur = (unsigned long long) -1;
 	if(statement)
@@ -67,9 +69,14 @@ sql_mysql_statement_(SQL *restrict me, const char *restrict statement)
 }
 
 /* Free the resources used by a statement */
-int
+unsigned long
 sql_statement_mysql_free_(SQL_STATEMENT *me)
 {
+	me->refcount--;
+	if(me->refcount)
+	{
+		return me->refcount;
+	}
 	if(me->result)
 	{
 		mysql_free_result(me->result);
@@ -198,6 +205,18 @@ sql_statement_mysql_value_(SQL_STATEMENT *restrict me, unsigned int col, char *r
 	}
 	return me->lengths[col] + 1;
 }
+
+/* Retrieve a pointer to the first byte in a field, or NULL if the value is NULL */
+const unsigned char *
+sql_statement_mysql_valueptr_(SQL_STATEMENT *me, unsigned int col)
+{
+	if(!me->row || col >= me->columns)
+	{
+		return NULL;
+	}
+	return (const unsigned char *) me->row[col];
+}
+
 
 /* Return 1 if the specified column in the current row is NULL */
 int

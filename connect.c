@@ -61,7 +61,7 @@ sql_connect_uri(URI *uri)
 	{
 		/* Save error state */
 		sql_set_error_(conn->api->sqlstate(conn), conn->api->error(conn));
-		conn->api->free(conn);
+		conn->api->release(conn);
 		return NULL;
 	}
 	return conn;

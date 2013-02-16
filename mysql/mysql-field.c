@@ -39,15 +39,21 @@ sql_statement_mysql_field_(SQL_STATEMENT *me, unsigned int col)
 		return NULL;
 	}
 	p = (SQL_FIELD *) calloc(1, sizeof(SQL_FIELD));
+	p->refcount = 1;
 	p->api = &mysql_field_api;
 	p->field = &(me->fields[col]);
 	return p;
 }
 
 /* Free a SQL_FIELD structure */
-int
+unsigned long
 sql_field_mysql_free_(SQL_FIELD *me)
 {
+	me->refcount--;
+	if(me->refcount)
+	{
+		return me->refcount;
+	}
 	free(me);
 	return 0;
 }

@@ -29,7 +29,7 @@ sql_stmt_field(SQL_STATEMENT *statement, unsigned int col)
 int
 sql_field_destroy(SQL_FIELD *field)
 {
-	return field->api->free(field);
+	return field->api->release(field);
 }
 	
 const char *

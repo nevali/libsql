@@ -30,12 +30,12 @@
 
 struct sql_engine_struct
 {
-	SQL_ENGINE_API *api;
+	SQL_ENGINE_COMMON_MEMBERS
 };
 
 struct sql_struct
 {
-	SQL_API *api;
+	SQL_COMMON_MEMBERS
 	MYSQL mysql;
 	char sqlstate[6];
 	char error[512];
@@ -43,7 +43,7 @@ struct sql_struct
 
 struct sql_statement_struct
 {
-	SQL_STATEMENT_API *api;
+	SQL_STATEMENT_COMMON_MEMBERS
 	SQL *sql;
 	char *statement;	
 	MYSQL_RES *result;
@@ -58,7 +58,7 @@ struct sql_statement_struct
 
 struct sql_field_struct
 {
-	SQL_FIELD_API *api;
+	SQL_FIELD_COMMON_MEMBERS
 	MYSQL_FIELD *field;
 };
 
@@ -67,14 +67,14 @@ SQL *sql_engine_mysql_create_(SQL_ENGINE *me);
 void sql_mysql_set_error_(SQL *restrict me, const char *restrict sqlstate, const char *restrict message);
 void sql_mysql_copy_error_(SQL *me);
 
-int sql_mysql_free_(SQL *me);
+unsigned long sql_mysql_free_(SQL *me);
 const char *sql_mysql_sqlstate_(SQL *me);
 const char *sql_mysql_error_(SQL *me);
 int sql_mysql_connect_(SQL *restrict me, URI *restrict uri);
 int sql_mysql_execute_(SQL *restrict me, const char *restrict statement, void *restrict *restrict resultdata);
 SQL_STATEMENT *sql_mysql_statement_(SQL *restrict me, const char *restrict statement);
 
-int sql_statement_mysql_free_(SQL_STATEMENT *me);
+unsigned long sql_statement_mysql_free_(SQL_STATEMENT *me);
 const char *sql_statement_mysql_statement_(SQL_STATEMENT *me);
 int sql_statement_mysql_set_results_(SQL_STATEMENT *restrict me, void *data);
 unsigned int sql_statement_mysql_columns_(SQL_STATEMENT *restrict me);
@@ -85,12 +85,13 @@ int sql_statement_mysql_next_(SQL_STATEMENT *me);
 SQL_FIELD *sql_statement_mysql_field_(SQL_STATEMENT *me, unsigned int col);
 int sql_statement_mysql_null_(SQL_STATEMENT *me, unsigned int col);
 size_t sql_statement_mysql_value_(SQL_STATEMENT *restrict me, unsigned int col, char *restrict buf, size_t buflen);
+const unsigned char *sql_statement_mysql_valueptr_(SQL_STATEMENT *me, unsigned int col);
 size_t sql_statement_mysql_valuelen_(SQL_STATEMENT *me, unsigned int col);
 unsigned long long sql_statement_mysql_cur_(SQL_STATEMENT *me);
 int sql_statement_mysql_seek_(SQL_STATEMENT *me, unsigned long long row);
 int sql_statement_mysql_rewind_(SQL_STATEMENT *me);
 
-int sql_field_mysql_free_(SQL_FIELD *me);
+unsigned long sql_field_mysql_free_(SQL_FIELD *me);
 const char *sql_field_mysql_name_(SQL_FIELD *me);
 size_t sql_field_mysql_width_(SQL_FIELD *me);
 

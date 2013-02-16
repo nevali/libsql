@@ -49,7 +49,7 @@ sql_query(SQL *restrict sql, const char *restrict statement)
 	r = sql->api->execute(sql, statement, &data);
 	if(r)
 	{
-		rs->api->free(rs);
+		rs->api->release(rs);
 		return NULL;
 	}
 	rs->api->set_results(rs, data);
@@ -59,7 +59,7 @@ sql_query(SQL *restrict sql, const char *restrict statement)
 int
 sql_stmt_destroy(SQL_STATEMENT *stmt)
 {
-	return stmt->api->free(stmt);
+	return stmt->api->release(stmt);
 }
 
 unsigned int
