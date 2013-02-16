@@ -13,5 +13,5 @@
 ##  limitations under the License.
 
 EXTRA_DIST = \
-	doc.m4 nls.m4 cc.m4 libedit.m4 liburi.m4 mysql.m4 prefix.m4 \
+	doc.m4 nls.m4 cc.m4 libedit.m4 liburi.m4 mysql.m4 prefix.m4 uuid.m4 \
 	libtool.m4 lt~obsolete.m4 ltoptions.m4 ltsugar.m4 ltversion.m4
