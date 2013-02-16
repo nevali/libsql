@@ -11,6 +11,7 @@
 *-stamp
 Makefile.in
 Makefile
+/NOTES
 /isql
 /configure
 /libtool
