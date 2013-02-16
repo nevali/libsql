@@ -16,11 +16,15 @@ AC_DEFUN([LIBSQL_CHECK_MYSQL],[
 AC_CHECK_PROG([MYSQL_CONFIG],[mysql_config],[mysql_config])
 if ! test x"$MYSQL_CONFIG" = x"" ; then
    engine_mysql="yes"
+   mysql_darwin_fixups="no"
    ENGINE_SUBDIRS="$ENGINE_SUBDIRS mysql"
    MYSQL_CPPFLAGS=`$MYSQL_CONFIG --include`
    MYSQL_LIBDIR=`$MYSQL_CONFIG --variable=pkglibdir`
+   if test "$?" -gt 0 ; then
+      MYSQL_LIBDIR=""
+   fi
    MYSQL_LIBS=`$MYSQL_CONFIG --libs_r`
-   if test -r "$MYSQL_LIBDIR/libmysqlclient_r.18.dylib" ; then
+   if test x"$cross_compiling" = x"no" && test x"$host_os" = x"Darwin" && test -r "$MYSQL_LIBDIR/libmysqlclient_r.18.dylib" ; then
    	  mysql_darwin_fixups=yes
    fi
 fi
