@@ -68,7 +68,7 @@ sql_mysql_connect_(SQL *me, URI *uri)
 		sql_mysql_copy_error_(me);
 		return -1;
 	}
-	sql_mysql_execute_(me, "SET NAMES 'utf'", NULL);
+	mysql_set_character_set(&(me->mysql), "utf");
 	sql_mysql_execute_(me, "SET sql_mode='ANSI_QUOTES,IGNORE_SPACE,PIPES_AS_CONCAT'", NULL);
 	sql_mysql_execute_(me, "SET storage_engine='InnoDB'", NULL);
 	sql_mysql_execute_(me, "SET time_zone='+00:00'", NULL);
