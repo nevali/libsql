@@ -14,7 +14,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-DIST_SUBDIRS = liburi libedit mysql
+DIST_SUBDIRS = m4 liburi libedit mysql
 
 SUBDIRS = @LIBURI_SUBDIRS@ @LIBEDIT_SUBDIRS@ @ENGINE_SUBDIRS@ .
 
