@@ -155,7 +155,7 @@ sql_statement_def_addref_(SQL_STATEMENT *me)
 }
 
 int
-sql_field_queryinterface_(SQL_FIELD *restrict me, uuid_t *restrict uuid, void *restrict *restrict out)
+sql_field_def_queryinterface_(SQL_FIELD *restrict me, uuid_t *restrict uuid, void *restrict *restrict out)
 {
 	if(!uuid_compare(*uuid, sql_uuid_unknown) || !uuid_compare(*uuid, sql_uuid_field))
 	{
@@ -168,7 +168,7 @@ sql_field_queryinterface_(SQL_FIELD *restrict me, uuid_t *restrict uuid, void *r
 }
 
 unsigned long
-sql_field_addref_(SQL_FIELD *me)
+sql_field_def_addref_(SQL_FIELD *me)
 {
 	me->refcount++;
 	return me->refcount;
