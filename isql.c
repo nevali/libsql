@@ -22,9 +22,14 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <unistd.h>
 
 #include "histedit.h"
 #include "libsql.h"
+
+#ifndef EXIT_SUCCESS
+# define EXIT_SUCCESS                  0
+#endif
 
 #ifndef EXIT_FAILURE
 # define EXIT_FAILURE                  1
@@ -45,12 +50,21 @@ static char *query_buf;
 static size_t query_len, query_alloc;
 static struct query_struct *pqueries;
 static size_t pquery_count, pquery_alloc;
+static SQL *sql_conn;
 
 static void
+usage(void)
+{
+	fprintf(stderr, "Usage: %s [URI]\n", short_program_name);
+}
+
+static int
 check_args(int argc, char **argv)
 {
 	char *t;
+	int c;
 	
+	connect_uri = NULL;
 	t = strrchr(argv[0], '/');
 	if(t)
 	{
@@ -60,12 +74,28 @@ check_args(int argc, char **argv)
 	{
 		short_program_name = t;
 	}
-	if(argc != 2)
+	while((c = getopt(argc, argv, "h")) != -1)
 	{
-		fprintf(stderr, "Usage: %s URI\n", short_program_name);
-		exit(EXIT_FAILURE);
+		switch(c)
+		{
+			case 'h':
+				usage();
+				exit(EXIT_SUCCESS);
+			default:
+				return -1;
+		}
 	}
-	connect_uri = argv[1];
+	argc -= optind;
+	argv += optind;
+	if(argc > 1)
+	{
+		return -1;
+	}
+	if(argc == 1)
+	{
+		connect_uri = argv[1];
+	}
+	return 0;
 }
 
 static char *
@@ -487,12 +517,34 @@ exec_builtin(SQL *conn, History *hist, char *query)
 	{
 		exit(EXIT_SUCCESS);
 	}
+	if(!strncmp(query, "\\c", 2))
+	{
+		query += 2;
+		while(isspace(*query)) query++;
+		if(!*query)
+		{
+			printf("[08000] Specify \"\\c URI\" to establish a new connection\n");
+			return -1;
+		}
+		conn = sql_connect(query);
+		if(!conn)
+		{
+			printf("[%s] %s\n", sql_sqlstate(NULL), sql_error(NULL));
+			return -1;
+		}
+		if(sql_conn)
+		{
+			sql_disconnect(sql_conn);
+		}
+		sql_conn = conn;
+		return 0;
+	}
 	printf("[42000] Unknown command '%s'\n", query);
 	return -1;
 }
 
 static int
-exec_queries(SQL *conn, History *hist)
+exec_queries(History *hist)
 {
 	HistEvent ev;
 	size_t c;
@@ -505,13 +557,18 @@ exec_queries(SQL *conn, History *hist)
 		history(hist, &ev, H_ADD, pqueries[c].query);
 		if(pqueries[c].query[0] == '\\')
 		{
-			exec_builtin(conn, hist, pqueries[c].query);
+			exec_builtin(sql_conn, hist, pqueries[c].query);
 			continue;
 		}
-		rs = sql_query(conn, pqueries[c].query);
+		if(!sql_conn)
+		{
+			printf("[08003] Not connected to database server\n");
+			continue;
+		}
+		rs = sql_query(sql_conn, pqueries[c].query);
 		if(!rs)
 		{
-			printf("[%s] %s\n", sql_sqlstate(conn), sql_error(conn));
+			printf("[%s] %s\n", sql_sqlstate(sql_conn), sql_error(sql_conn));
 			return -1;
 		}
 		cols = sql_stmt_columns(rs);
@@ -546,22 +603,25 @@ exec_queries(SQL *conn, History *hist)
 int
 main(int argc, char **argv)
 {
-	SQL *conn;
 	EditLine *el;
 	History *hist;
 	const char *buf;
 	int num, state;
 	
 	check_args(argc, argv);
-	conn = sql_connect(connect_uri);
-	if(!conn)
+	if(connect_uri)
 	{
-		fprintf(stderr, "%s: [%s] %s\n", short_program_name, sql_sqlstate(NULL), sql_error(NULL));
-		exit(EXIT_FAILURE);
+		sql_conn = sql_connect(connect_uri);
+		if(!sql_conn)
+		{
+			fprintf(stderr, "%s: [%s] %s\n", short_program_name, sql_sqlstate(NULL), sql_error(NULL));
+			exit(EXIT_FAILURE);
+		}
 	}
 	fprintf(stderr, "%s interactive SQL shell (%s)\n\n", PACKAGE, VERSION);
 	fprintf(stderr, 
-		"Type:  \\g or ; to execute query\n"
+		"Type:  \\c URI to establish a new connection\n"
+		"       \\g or ; to execute query\n"
 		"       \\G to execute the query showing results in long format\n"
 		"       \\q to end the SQL session\n"
 		"\n"
@@ -578,7 +638,7 @@ main(int argc, char **argv)
 		state = parse_query(buf);
 		if(state == 0)
 		{
-			exec_queries(conn, hist);
+			exec_queries(hist);
 		}
 	}
 	return 0;
