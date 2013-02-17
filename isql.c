@@ -630,7 +630,7 @@ main(int argc, char **argv)
 	el = el_init(argv[0], stdin, stdout, stderr);
 	el_set(el, EL_EDITOR, "emacs");
 	el_set(el, EL_SIGNAL, 1);
-	el_set(el, EL_PROMPT_ESC, prompt);
+	el_set(el, EL_PROMPT, prompt);
 	el_set(el, EL_HIST, history, hist);
 	el_source(el, NULL);
 	while((buf = el_gets(el, &num)) != NULL && num != 0)
