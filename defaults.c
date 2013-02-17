@@ -114,6 +114,27 @@ sql_def_addref_(SQL *me)
 }
 
 int
+sql_def_lock_(SQL *me)
+{
+	pthread_mutex_lock(&(me->lock));
+	return 0;
+}
+
+int
+sql_def_unlock_(SQL *me)
+{
+	pthread_mutex_unlock(&(me->lock));
+	return 0;
+}
+
+int
+sql_def_trylock_(SQL *me)
+{
+	return pthread_mutex_trylock(&(me->lock));
+}
+
+
+int
 sql_statement_def_queryinterface_(SQL_STATEMENT *restrict me, uuid_t *restrict uuid, void *restrict *restrict out)
 {
 	if(!uuid_compare(*uuid, sql_uuid_unknown) || !uuid_compare(*uuid, sql_uuid_statement))

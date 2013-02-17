@@ -138,6 +138,9 @@ unsigned long sql_engine_def_release_(SQL_ENGINE *me);
 
 int sql_def_queryinterface_(SQL *restrict me, uuid_t *restrict uuid, void *restrict *restrict out);
 unsigned long sql_def_addref_(SQL *me);
+int sql_def_lock_(SQL *me);
+int sql_def_unlock_(SQL *me);
+int sql_def_trylock_(SQL *me);
 
 int sql_statement_def_queryinterface_(SQL_STATEMENT *restrict me, uuid_t *restrict uuid, void *restrict *restrict out);
 unsigned long sql_statement_def_addref_(SQL_STATEMENT *me);

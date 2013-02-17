@@ -37,9 +37,9 @@ static SQL_API mysql_api = {
 	sql_def_queryinterface_,
 	sql_def_addref_,
 	sql_mysql_free_,
-	NULL,
-	NULL,
-	NULL,
+	sql_def_lock_,
+	sql_def_unlock_,
+	sql_def_trylock_,
 	NULL,
 	sql_mysql_sqlstate_,
 	sql_mysql_error_,
@@ -91,6 +91,7 @@ sql_engine_mysql_create_(SQL_ENGINE *me)
 		free(inst);
 		return NULL;
 	}
+	pthread_mutex_init(&(inst->lock), NULL);
 	return inst;
 }
 
@@ -102,6 +103,7 @@ sql_mysql_free_(SQL *me)
 	{
 		return me->refcount;
 	}
+	pthread_mutex_destroy(&(me->lock));
 	mysql_close(&(me->mysql));
 	free(me);
 	return 0;
