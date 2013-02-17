@@ -108,3 +108,20 @@ sql_mysql_copy_error_(SQL *me)
 	err = mysql_error(&(me->mysql));
 	sql_mysql_set_error_(me, sqlstate, err);
 }
+
+size_t
+sql_mysql_escape_(SQL *restrict me, const unsigned char *restrict from, size_t length, char *restrict buf, size_t buflen)
+{
+	size_t needed;
+	
+	needed = (length * 2) + 1;
+	if(buflen < needed)
+	{
+		if(buf)
+		{
+			*buf = 0;
+		}
+		return needed;
+	}
+	return mysql_real_escape_string(&(me->mysql), buf, (const char *) from, length) + 1;
+}

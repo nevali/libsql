@@ -68,6 +68,7 @@ void sql_mysql_set_error_(SQL *restrict me, const char *restrict sqlstate, const
 void sql_mysql_copy_error_(SQL *me);
 
 unsigned long sql_mysql_free_(SQL *me);
+size_t sql_mysql_escape_(SQL *restrict me, const unsigned char *restrict from, size_t length, char *restrict buf, size_t buflen);
 const char *sql_mysql_sqlstate_(SQL *me);
 const char *sql_mysql_error_(SQL *me);
 int sql_mysql_connect_(SQL *restrict me, URI *restrict uri);

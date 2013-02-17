@@ -51,7 +51,7 @@ struct sql_api_struct
 	int (*lock)(SQL *me);
 	int (*unlock)(SQL *me);
 	int (*trylock)(SQL *me);
-	void *reserved_escape;
+	size_t (*escape)(SQL *restrict me, const unsigned char *restrict from, size_t length, char *restrict buf, size_t buflen);
 	const char *(*sqlstate)(SQL *me);
 	const char *(*error)(SQL *me);
 	int (*connect)(SQL *restrict me, URI *restrict uri);

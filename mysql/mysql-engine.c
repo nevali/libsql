@@ -40,7 +40,7 @@ static SQL_API mysql_api = {
 	sql_def_lock_,
 	sql_def_unlock_,
 	sql_def_trylock_,
-	NULL,
+	sql_mysql_escape_,
 	sql_mysql_sqlstate_,
 	sql_mysql_error_,
 	sql_mysql_connect_,
