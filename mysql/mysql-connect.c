@@ -115,7 +115,7 @@ sql_mysql_escape_(SQL *restrict me, const unsigned char *restrict from, size_t l
 	size_t needed;
 	
 	needed = (length * 2) + 1;
-	if(buflen < needed)
+	if(buflen < needed || !buf)
 	{
 		if(buf)
 		{

@@ -43,6 +43,9 @@ extern "C" {
 	const char *sql_sqlstate(SQL *connection);
 	const char *sql_error(SQL *connection);
 
+	/* Escape a string */
+	size_t sql_escape(SQL *restrict sql, const unsigned char *restrict from, size_t length, char *restrict buf, size_t buflen);
+	
 	/* Execute a statement not expected to return a result-set */
 	int sql_execute(SQL *restrict sql, const char *restrict statement);
 	int sql_executef(SQL *restrict sql, const char *restrict statement, ...);

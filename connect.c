@@ -94,3 +94,16 @@ sql_trylock(SQL *sql)
 {
 	return sql->api->trylock(sql);
 }
+
+/* Escape a string */
+size_t
+sql_escape(SQL *restrict sql, const unsigned char *restrict from, size_t length, char *restrict buf, size_t buflen)
+{
+	/* Note that:
+	 * 1. The return value is always the number of bytes required, including the NULL terminator.
+	 * 2. If the return value is greater than buflen, the number of bytes actually written is
+	 *    unspecified, except that it will be less than buflen.
+	 * 3. It is entirely valid to specify buf and buflen as zero.
+	 */
+	return sql->api->escape(sql, from, length, buf, buflen);
+}
