@@ -21,8 +21,8 @@
 #include "p_mysql.h"
 
 static SQL_FIELD_API mysql_field_api = {
-	NULL,
-	NULL,
+	sql_field_def_queryinterface_,
+	sql_field_def_addref_,
 	sql_field_mysql_free_,
 	sql_field_mysql_name_,
 	sql_field_mysql_width_

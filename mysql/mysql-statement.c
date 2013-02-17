@@ -21,8 +21,8 @@
 #include "p_mysql.h"
 
 static SQL_STATEMENT_API mysql_statement_api = {
-	NULL,
-	NULL,
+	sql_statement_def_queryinterface_,
+	sql_statement_def_addref_,
 	sql_statement_mysql_free_,
 	sql_statement_mysql_statement_,
 	sql_statement_mysql_set_results_,

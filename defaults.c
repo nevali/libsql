@@ -71,6 +71,7 @@ sql_engine_def_queryinterface_(SQL_ENGINE *restrict me, uuid_t *restrict uuid, v
 		return 0;
 	}
 	*out = NULL;
+	errno = ENOENT;
 	return -1;
 }
 
@@ -92,4 +93,62 @@ sql_engine_def_release_(SQL_ENGINE *me)
 	return 1;
 }
 
-	 
+int
+sql_def_queryinterface_(SQL *restrict me, uuid_t *restrict uuid, void *restrict *restrict out)
+{
+	if(!uuid_compare(*uuid, sql_uuid_unknown) || !uuid_compare(*uuid, sql_uuid_sql))
+	{
+		*out = me;
+		return 0;
+	}
+	*out = NULL;
+	errno = ENOENT;
+	return -1;
+}
+
+unsigned long
+sql_def_addref_(SQL *me)
+{
+	me->refcount++;
+	return me->refcount;
+}
+
+int
+sql_statement_def_queryinterface_(SQL_STATEMENT *restrict me, uuid_t *restrict uuid, void *restrict *restrict out)
+{
+	if(!uuid_compare(*uuid, sql_uuid_unknown) || !uuid_compare(*uuid, sql_uuid_statement))
+	{
+		*out = me;
+		return 0;
+	}
+	*out = NULL;
+	errno = ENOENT;
+	return -1;
+}
+
+unsigned long
+sql_statement_def_addref_(SQL_STATEMENT *me)
+{
+	me->refcount++;
+	return me->refcount;
+}
+
+int
+sql_field_queryinterface_(SQL_FIELD *restrict me, uuid_t *restrict uuid, void *restrict *restrict out)
+{
+	if(!uuid_compare(*uuid, sql_uuid_unknown) || !uuid_compare(*uuid, sql_uuid_field))
+	{
+		*out = me;
+		return 0;
+	}
+	*out = NULL;
+	errno = ENOENT;
+	return -1;
+}
+
+unsigned long
+sql_field_addref_(SQL_FIELD *me)
+{
+	me->refcount++;
+	return me->refcount;
+}

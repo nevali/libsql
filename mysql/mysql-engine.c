@@ -34,8 +34,8 @@ static SQL_ENGINE_API mysql_engine_api = {
 };
 
 static SQL_API mysql_api = {
-	NULL,
-	NULL,
+	sql_def_queryinterface_,
+	sql_def_addref_,
 	sql_mysql_free_,
 	NULL,
 	NULL,

@@ -136,4 +136,13 @@ int sql_engine_def_queryinterface_(SQL_ENGINE *restrict me, uuid_t *restrict uui
 unsigned long sql_engine_def_addref_(SQL_ENGINE *me);
 unsigned long sql_engine_def_release_(SQL_ENGINE *me);
 
+int sql_def_queryinterface_(SQL *restrict me, uuid_t *restrict uuid, void *restrict *restrict out);
+unsigned long sql_def_addref_(SQL *me);
+
+int sql_statement_def_queryinterface_(SQL_STATEMENT *restrict me, uuid_t *restrict uuid, void *restrict *restrict out);
+unsigned long sql_statement_def_addref_(SQL_STATEMENT *me);
+
+int sql_field_def_queryinterface_(SQL_FIELD *restrict me, uuid_t *restrict uuid, void *restrict *restrict out);
+unsigned long sql_field_def_addref_(SQL_FIELD *me);
+
 #endif /*!LIBSQL_ENGINE_H_*/
