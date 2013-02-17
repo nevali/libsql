@@ -36,6 +36,10 @@ extern "C" {
 	SQL *sql_connect_uri(URI *uri);
 	int sql_disconnect(SQL *sql);
 
+	int sql_lock(SQL *sql);
+	int sql_unlock(SQL *sql);
+	int sql_trylock(SQL *sql);
+
 	const char *sql_sqlstate(SQL *connection);
 	const char *sql_error(SQL *connection);
 

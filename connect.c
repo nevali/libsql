@@ -66,3 +66,31 @@ sql_connect_uri(URI *uri)
 	}
 	return conn;
 }
+
+/* Disconnect from a server */
+int
+sql_disconnect(SQL *sql)
+{
+	return sql->api->release(sql);
+}
+
+/* Lock a connection, waiting if needed */
+int
+sql_lock(SQL *sql)
+{
+	return sql->api->lock(sql);
+}
+
+/* Unlock a locked connection */
+int
+sql_unlock(SQL *sql)
+{
+	return sql->api->unlock(sql);
+}
+
+/* Attempt to lock a connection, fail immediately if already locked */
+int
+sql_trylock(SQL *sql)
+{
+	return sql->api->trylock(sql);
+}
