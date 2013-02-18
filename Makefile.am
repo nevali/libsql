@@ -16,7 +16,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 DIST_SUBDIRS = m4 liburi libedit mysql
 
-SUBDIRS = @LIBURI_SUBDIRS@ @LIBEDIT_SUBDIRS@ @ENGINE_SUBDIRS@ .
+SUBDIRS = @subdirs@ @ENGINE_SUBDIRS@ .
 
 lib_LTLIBRARIES = libsql.la
 
@@ -36,7 +36,7 @@ libsql_la_LDFLAGS = -avoid-version
 
 isql_SOURCES = isql.c
 
-isql_LDADD = libsql.la @LIBEDIT_LIBS@
+isql_LDADD = libsql.la @LIBEDIT_LIBS@ @LIBEDIT_LOCAL_LIBS@
 
 mysql-darwin-fixups-stamp: isql libsql.la
 	if test x"${mysql_darwin_fixups}" = x"yes" ; then \
