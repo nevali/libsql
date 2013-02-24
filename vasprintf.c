@@ -136,6 +136,9 @@ typedef struct {
   va_list      vargs;             /* pointer to current position into vargs */
   char *       sprintf_string;
   FILE *       fprintf_file;
+  SQL *        sql;
+  char *       qbuf;
+  size_t       qbuflen;
 } xprintf_struct;
 
 /*
@@ -198,7 +201,8 @@ static int print_it(xprintf_struct *s, size_t approx_len,
 {
   va_list varg;
   int vsprintf_len;
-  size_t len;
+  size_t len, qlen;
+  char *p;
 
   if (realloc_buff(s,approx_len) == EOF)
     return EOF;
@@ -213,6 +217,36 @@ static int print_it(xprintf_struct *s, size_t approx_len,
   if (vsprintf_len == EOF) /* must be done *after* overflow-check */
     return EOF;
 
+  /* s->dest_string contains the newly-added string, we need to wrap it
+   * in quotes and escape the contents
+   */
+  qlen = s->sql->api->escape(s->sql, (const unsigned char *) s->dest_string, vsprintf_len, s->qbuf, s->qbuflen);
+  if (qlen == (size_t) -1)
+  {
+    return EOF;
+  }
+  if (qlen > s->qbuflen)
+  {
+	  p = (char *) realloc(s->qbuf, qlen);
+	  if(!p)
+	  {
+        return EOF;
+	  }
+	  s->qbuf = p;
+	  s->qbuflen = qlen;
+	  qlen = s->sql->api->escape(s->sql, (const unsigned char *) s->dest_string, vsprintf_len, s->qbuf, s->qbuflen);
+	  if(qlen == (size_t) -1)
+	  {
+	    return EOF;
+	  }	  
+  }
+  /* Now ensure that our buffer is large enough to hold the quoted string */
+  if (realloc_buff(s, qlen + 2) == EOF)
+	  return EOF;
+  s->dest_string[0] = '\'';
+  strcpy(&(s->dest_string[1]), s->qbuf);
+  s->dest_string[qlen] = '\'';
+  s->dest_string[qlen + 1] = 0;
   s->pseudo_len += vsprintf_len;
   len = strlen(s->dest_string);
   s->real_len += len;
@@ -619,11 +653,14 @@ static int core(xprintf_struct *s)
 }
 
 int
-sql_vasprintf_query_(char **ptr, const char *format_string, va_list vargs)
+sql_vasprintf_query_(SQL *restrict sql, char *restrict *restrict ptr, const char *restrict format_string, va_list vargs)
 {
   xprintf_struct s;
   int retval;
 
+  s.qbuf = NULL;
+  s.qbuflen = 0;
+  s.sql = sql;
   s.src_string = format_string;
 #ifdef va_copy
   va_copy (s.vargs, vargs);
@@ -638,6 +675,7 @@ sql_vasprintf_query_(char **ptr, const char *format_string, va_list vargs)
 
   retval = core(&s);
   va_end(s.vargs);
+  free(s.qbuf);
   if (retval == EOF) {
     *ptr = NULL;
     return EOF;

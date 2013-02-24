@@ -87,13 +87,14 @@ check_args(int argc, char **argv)
 	}
 	argc -= optind;
 	argv += optind;
+	fprintf(stderr, "argc is %d\n", argc);
 	if(argc > 1)
 	{
 		return -1;
 	}
 	if(argc == 1)
 	{
-		connect_uri = argv[1];
+		connect_uri = argv[0];
 	}
 	return 0;
 }
