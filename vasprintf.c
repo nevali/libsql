@@ -196,7 +196,7 @@ static int usual_char(xprintf_struct * s)
  *  Return value: 0 = ok
  *                EOF = error
  */
-static int print_it(xprintf_struct *s, size_t approx_len,
+static int print_it(xprintf_struct *s, size_t approx_len, int quote_mode,
                     const char *format_string, ...)
 {
   va_list varg;
@@ -216,37 +216,46 @@ static int print_it(xprintf_struct *s, size_t approx_len,
 
   if (vsprintf_len == EOF) /* must be done *after* overflow-check */
     return EOF;
-
-  /* s->dest_string contains the newly-added string, we need to wrap it
-   * in quotes and escape the contents
-   */
-  qlen = s->sql->api->escape(s->sql, (const unsigned char *) s->dest_string, vsprintf_len, s->qbuf, s->qbuflen);
-  if (qlen == (size_t) -1)
+  if (quote_mode)
   {
-    return EOF;
-  }
-  if (qlen > s->qbuflen)
-  {
-	  p = (char *) realloc(s->qbuf, qlen);
-	  if(!p)
-	  {
-        return EOF;
-	  }
-	  s->qbuf = p;
-	  s->qbuflen = qlen;
+	  /* s->dest_string contains the newly-added string, we need to wrap it
+	   * in quotes and escape the contents
+	   */
 	  qlen = s->sql->api->escape(s->sql, (const unsigned char *) s->dest_string, vsprintf_len, s->qbuf, s->qbuflen);
-	  if(qlen == (size_t) -1)
+	  if (qlen == (size_t) -1)
 	  {
 	    return EOF;
-	  }	  
+	  }
+	  if (qlen > s->qbuflen)
+	  {
+		  p = (char *) realloc(s->qbuf, qlen);
+		  if(!p)
+		  {
+	        return EOF;
+		  }
+		  s->qbuf = p;
+		  s->qbuflen = qlen;
+		  qlen = s->sql->api->escape(s->sql, (const unsigned char *) s->dest_string, vsprintf_len, s->qbuf, s->qbuflen);
+		  if(qlen == (size_t) -1)
+		  {
+		    return EOF;
+		  }	  
+	  }
+	  /* Now ensure that our buffer is large enough to hold the quoted string */
+	  if (realloc_buff(s, qlen + 2) == EOF)
+		  return EOF;
+	  if(quote_mode == 2)
+	  {
+	  	s->dest_string[0] = '\'';
+		strcpy(&(s->dest_string[1]), s->qbuf);
+		s->dest_string[qlen] = '\'';
+	    s->dest_string[qlen + 1] = 0;
+	  }
+	  else
+	  {
+	    strcpy(s->dest_string, s->qbuf);
+	  }
   }
-  /* Now ensure that our buffer is large enough to hold the quoted string */
-  if (realloc_buff(s, qlen + 2) == EOF)
-	  return EOF;
-  s->dest_string[0] = '\'';
-  strcpy(&(s->dest_string[1]), s->qbuf);
-  s->dest_string[qlen] = '\'';
-  s->dest_string[qlen + 1] = 0;
   s->pseudo_len += vsprintf_len;
   len = strlen(s->dest_string);
   s->real_len += len;
@@ -267,12 +276,18 @@ static int print_it(xprintf_struct *s, size_t approx_len,
  *                EOF = error
  */
 static int type_s(xprintf_struct *s, int width, int prec,
-                  const char *format_string, const char *arg_string)
+                  const char *format_string, const char *arg_string, int quote_mode)
 {
   size_t string_len;
 
   if (arg_string == NULL)
-    return print_it(s, (size_t)6, "(null)", 0);
+  {
+	  if (!quote_mode)
+	  {
+	    return print_it(s, (size_t)6, 0, "(null)", 0);
+	  }
+	  return print_it(s, (size_t)4, 0, "NULL", 0);
+  }
 
   /* hand-made strlen() whitch stops when 'prec' is reached. */
   /* if 'prec' is -1 then it is never reached. */
@@ -283,7 +298,7 @@ static int type_s(xprintf_struct *s, int width, int prec,
   if (width != -1 && string_len < (size_t)width)
     string_len = (size_t)width;
 
-  return print_it(s, string_len, format_string, arg_string);
+  return print_it(s, string_len, quote_mode, format_string, arg_string);
 }
 
 /*
@@ -434,7 +449,7 @@ static int dispatch(xprintf_struct *s)
 
   /* type */
   type = *SRCTXT;
-  if (strchr("diouxXfegEGcspn",type) == NULL)
+  if (strchr("diouxXfegEGcsqQpn",type) == NULL)
     INCOHERENT();               /* unknown type */
   SRCTXT++;
 
@@ -506,17 +521,17 @@ static int dispatch(xprintf_struct *s)
   case 'X':
     switch (modifier) {
     case -1 :
-      return print_it(s, (size_t)approx_width, format_string, va_arg(s->vargs, int));
+      return print_it(s, (size_t)approx_width, 0, format_string, va_arg(s->vargs, int));
     case 'L':
-      return print_it(s, (size_t)approx_width, format_string, va_arg(s->vargs, long long int));
+      return print_it(s, (size_t)approx_width, 0, format_string, va_arg(s->vargs, long long int));
     case 'l':
-      return print_it(s, (size_t)approx_width, format_string, va_arg(s->vargs, long int));
+      return print_it(s, (size_t)approx_width, 0, format_string, va_arg(s->vargs, long int));
     case 'h':
-      return print_it(s, (size_t)approx_width, format_string, va_arg(s->vargs, int));
+      return print_it(s, (size_t)approx_width, 0, format_string, va_arg(s->vargs, int));
     case 'z':
-      return print_it(s, (size_t)approx_width, format_string, va_arg(s->vargs, size_t));
+      return print_it(s, (size_t)approx_width, 0, format_string, va_arg(s->vargs, size_t));
     case 't':
-      return print_it(s, (size_t)approx_width, format_string, va_arg(s->vargs, ptrdiff_t));
+      return print_it(s, (size_t)approx_width, 0, format_string, va_arg(s->vargs, ptrdiff_t));
       /* 'int' instead of 'short int' because default promotion is 'int' */
     default:
       INCOHERENT();
@@ -526,7 +541,7 @@ static int dispatch(xprintf_struct *s)
   case 'c':
     if (modifier != -1)
       INCOHERENT();
-    return print_it(s, (size_t)approx_width, format_string, va_arg(s->vargs, int));
+    return print_it(s, (size_t)approx_width, 0, format_string, va_arg(s->vargs, int));
     /* 'int' instead of 'char' because default promotion is 'int' */
 
     /* math */
@@ -538,21 +553,25 @@ static int dispatch(xprintf_struct *s)
     switch (modifier) {
     case -1 : /* because of default promotion, no modifier means 'l' */
     case 'l':
-      return print_it(s, (size_t)approx_width, format_string, va_arg(s->vargs, double));
+      return print_it(s, (size_t)approx_width, 0, format_string, va_arg(s->vargs, double));
     case 'L':
-      return print_it(s, (size_t)approx_width, format_string, va_arg(s->vargs, long double));
+      return print_it(s, (size_t)approx_width, 0, format_string, va_arg(s->vargs, long double));
     default:
       INCOHERENT();
     }
 
     /* string */
   case 's':
-    return type_s(s, width, prec, format_string, va_arg(s->vargs, const char*));
+    return type_s(s, width, prec, format_string, va_arg(s->vargs, const char*), 0);
+  case 'q':
+    return type_s(s, width, prec, format_string, va_arg(s->vargs, const char*), 1);
+  case 'Q':
+    return type_s(s, width, prec, format_string, va_arg(s->vargs, const char*), 2);
 
     /* pointer */
   case 'p':
     if (modifier == -1)
-      return print_it(s, (size_t)approx_width, format_string, va_arg(s->vargs, void *));
+      return print_it(s, (size_t)approx_width, 0, format_string, va_arg(s->vargs, void *));
     INCOHERENT();
 
     /* store */
