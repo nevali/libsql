@@ -24,6 +24,7 @@ static SQL_STATEMENT_API mysql_statement_api = {
 	sql_statement_def_queryinterface_,
 	sql_statement_def_addref_,
 	sql_statement_mysql_free_,
+	sql_statement_mysql_connection_,
 	sql_statement_mysql_statement_,
 	sql_statement_mysql_set_results_,
 	sql_statement_mysql_columns_,
@@ -84,6 +85,13 @@ sql_statement_mysql_free_(SQL_STATEMENT *me)
 	free(me->statement);
 	free(me);
 	return 0;
+}
+
+/* Return the connection associated with this statement */
+SQL *
+sql_statement_mysql_connection_(SQL_STATEMENT *me)
+{
+	return me->sql;
 }
 
 /* Return the (parameterised) SQL statement */

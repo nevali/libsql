@@ -176,4 +176,43 @@ sql_stmt_value(SQL_STATEMENT *restrict stmt, unsigned int col, char *restrict bu
 {
 	return stmt->api->value(stmt, col, buf, buflen);
 }
+
+int
+sql_stmt_execf(SQL_STATEMENT *statement, ...)
+{
+	va_list ap;
+	int r;
+	
+	va_start(ap, statement);
+	r = sql_stmt_vexecf(statement, ap);
+	va_end(ap);
+	return 0;
+}
+
+int
+sql_stmt_vexecf(SQL_STATEMENT *stmt, va_list ap)
+{
+	const char *format;
+	char *qs;
+	SQL *sql;
+	int r;
+	void *data;
+	
+	sql = stmt->api->connection(stmt);
+	format = stmt->api->statement(stmt);
+	stmt->api->set_results(stmt, NULL);	
+	r = sql_vasprintf_query_(sql, &qs, format, ap);
+	if(r == -1)
+	{
+		return -1;
+	}
+	r = sql->api->execute(sql, qs, &data);
+	free(qs);
+	if(r)
+	{
+		return -1;
+	}
+	return stmt->api->set_results(stmt, data);
+}
+
 	

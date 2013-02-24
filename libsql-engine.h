@@ -65,6 +65,7 @@ struct sql_statement_api_struct
 	int (*queryinterface)(SQL_STATEMENT *restrict me, uuid_t *restrict uuid, void *restrict *restrict out);
 	unsigned long (*addref)(SQL_STATEMENT *me);
 	unsigned long (*release)(SQL_STATEMENT *me);
+	SQL *(*connection)(SQL_STATEMENT *me);
 	const char *(*statement)(SQL_STATEMENT *me);
 	int (*set_results)(SQL_STATEMENT *restrict me, void *restrict data);
 	unsigned int (*columns)(SQL_STATEMENT *me);

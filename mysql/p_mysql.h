@@ -76,6 +76,7 @@ int sql_mysql_execute_(SQL *restrict me, const char *restrict statement, void *r
 SQL_STATEMENT *sql_mysql_statement_(SQL *restrict me, const char *restrict statement);
 
 unsigned long sql_statement_mysql_free_(SQL_STATEMENT *me);
+SQL *sql_statement_mysql_connection_(SQL_STATEMENT *me);
 const char *sql_statement_mysql_statement_(SQL_STATEMENT *me);
 int sql_statement_mysql_set_results_(SQL_STATEMENT *restrict me, void *data);
 unsigned int sql_statement_mysql_columns_(SQL_STATEMENT *restrict me);
