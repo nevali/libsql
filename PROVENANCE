@@ -1,0 +1,6 @@
+Package: libedit
+Version: 20121213-3.0
+Homepage: http://www.thrysoee.dk/editline/
+Tarball: http://www.thrysoee.dk/editline/libedit-20121213-3.0.tar.gz
+License: New BSD <http://www.netbsd.org/about/redistribution.html>
+
