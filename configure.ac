@@ -42,8 +42,12 @@ BT_CHECK_MYSQL
 if test x"$have_mysql" = x"yes" ; then
    engine_mysql="yes"
    ENGINE_SUBDIRS="$ENGINE_SUBDIRS mysql"
+   ENGINE_LIBS="$ENGINE_LIBS mysql/libmysql-engine.la"
+else
+	engine_mysql="no"
 fi
 
+AC_SUBST([ENGINE_LIBS])
 AC_SUBST([ENGINE_SUBDIRS])
 
 AC_CONFIG_FILES([Makefile
