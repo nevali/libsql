@@ -14,6 +14,7 @@
 
 AC_INIT([libsql],[master])
 AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([foreign])
 AM_MAINTAINER_MODE
 
@@ -23,7 +24,7 @@ BT_PROG_XCODE
 AC_PROG_CC([clang gcc c99 cc])
 AC_PROG_CC_C99
 AC_HEADER_STDC
-AC_PROG_LIBTOOL
+LT_INIT
 
 AC_CHECK_HEADERS([limits.h stddef.h])
 
