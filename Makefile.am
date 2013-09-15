@@ -14,7 +14,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-DIST_SUBDIRS = m4 liburi libedit mysql
+DIST_SUBDIRS = m4 libedit mysql
 
 SUBDIRS = @subdirs@ @ENGINE_SUBDIRS@ .
 
