@@ -564,8 +564,12 @@ static int dispatch(xprintf_struct *s)
   case 's':
     return type_s(s, width, prec, format_string, va_arg(s->vargs, const char*), 0);
   case 'q':
+    format_ptr--;
+    *format_ptr = 's';
     return type_s(s, width, prec, format_string, va_arg(s->vargs, const char*), 1);
   case 'Q':
+    format_ptr--;
+    *format_ptr = 's';
     return type_s(s, width, prec, format_string, va_arg(s->vargs, const char*), 2);
 
     /* pointer */
