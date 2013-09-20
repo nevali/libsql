@@ -45,7 +45,11 @@ static SQL_API mysql_api = {
 	sql_mysql_error_,
 	sql_mysql_connect_,
 	sql_mysql_execute_,
-	sql_mysql_statement_
+	sql_mysql_statement_,
+	sql_mysql_begin_,
+	sql_mysql_commit_,
+	sql_mysql_rollback_,
+	sql_mysql_deadlocked_
 };
 
 SQL_ENGINE *

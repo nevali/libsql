@@ -103,9 +103,15 @@ sql_mysql_copy_error_(SQL *me)
 {
 	const char *sqlstate;
 	const char *err;
+	int e;
 	
+	e = mysql_errno(&(me->mysql));
+	if(e == 1205 || e == 1213 || e == 1478 || e == 1479)
+	{
+		me->deadlocked = 1;
+	}
 	sqlstate = mysql_sqlstate(&(me->mysql));
-	err = mysql_error(&(me->mysql));
+	err = mysql_error(&(me->mysql));	
 	sql_mysql_set_error_(me, sqlstate, err);
 }
 
