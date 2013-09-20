@@ -32,6 +32,7 @@ libsql_la_SOURCES = p_libsql.h \
 	engine.c connect.c error.c statement.c field.c defaults.c vasprintf.c
 
 libsql_la_LIBADD = @ENGINE_LIBS@ @LOCAL_LIBS@
+EXTRA_libsql_la_DEPENDENCIES = @ENGINE_LIBS@ @LOCAL_LIBS@ 
 libsql_la_LDFLAGS = -avoid-version
 
 isql_SOURCES = isql.c
