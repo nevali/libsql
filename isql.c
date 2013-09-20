@@ -87,7 +87,6 @@ check_args(int argc, char **argv)
 	}
 	argc -= optind;
 	argv += optind;
-	fprintf(stderr, "argc is %d\n", argc);
 	if(argc > 1)
 	{
 		return -1;
