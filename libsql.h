@@ -23,6 +23,7 @@
 typedef struct sql_struct SQL;
 typedef struct sql_statement_struct SQL_STATEMENT;
 typedef struct sql_field_struct SQL_FIELD; 
+typedef int (*SQL_PERFORM_TXN)(SQL *restrict, void *restrict userdata);
 
 # if (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L) && !defined(restrict)
 #  define restrict
@@ -82,6 +83,13 @@ extern "C" {
 	int sql_field_destroy(SQL_FIELD *field);
 	const char *sql_field_name(SQL_FIELD *field);
 	size_t sql_field_width(SQL_FIELD *field);
+	
+	/* Transaction handling */
+	int sql_begin(SQL *sql);
+	int sql_commit(SQL *sql);
+	int sql_rollback(SQL *sql);
+	int sql_deadlocked(SQL *sql);
+	int sql_perform(SQL *restrict sql, SQL_PERFORM_TXN fn, void *restrict userdata, int maxretries);
 	
 # if defined(__cplusplus)
 }

@@ -57,6 +57,10 @@ struct sql_api_struct
 	int (*connect)(SQL *restrict me, URI *restrict uri);
 	int (*execute)(SQL *restrict me, const char *restrict statement, void *restrict *restrict data);
 	SQL_STATEMENT *(*statement)(SQL *restrict me, const char *restrict statement);
+	int (*begin)(SQL *me);
+	int (*commit)(SQL *me);
+	int (*rollback)(SQL *me);
+	int (*deadlocked)(SQL *me);
 };
 
 /* API provided on statements */

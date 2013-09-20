@@ -215,4 +215,73 @@ sql_stmt_vexecf(SQL_STATEMENT *stmt, va_list ap)
 	return stmt->api->set_results(stmt, data);
 }
 
+int
+sql_begin(SQL *sql)
+{
+	return sql->api->begin(sql);
+}
+
+int
+sql_commit(SQL *sql)
+{
+	return sql->api->commit(sql);
+}
+
+int
+sql_rollback(SQL *sql)
+{
+	return sql->api->rollback(sql);
+}
+
+int
+sql_perform(SQL *restrict sql, SQL_PERFORM_TXN fn, void *restrict userdata, int maxretries)
+{
+	int count, r;
 	
+	count = 0;
+	while(maxretries < 0 || count < maxretries)
+	{
+		if(sql_begin(sql))
+		{
+			return -1;
+		}
+		/* The callback must return zero to attempt to commit */
+		r = fn(sql, userdata);
+		if(!r && sql->api->deadlocked(sql))
+		{
+			/* A deadlock occurred, re-try */
+			sql_rollback(sql);
+			count++;
+			continue;
+		}	
+		if(r > 1)
+		{
+			/* Requested rollback */
+			sql_rollback(sql);
+			return 0;
+		}
+		if(r < 0)
+		{
+			/* An error occurred */
+			sql_rollback(sql);
+			count++;
+			continue;
+		}
+		if(!sql_commit(sql))
+		{
+			/* Successfully commited */
+			return 0;
+		}
+		/* Try again */
+		sql_rollback(sql);
+		count++;
+	}
+	/* Retry count exceeded */
+	return -1;
+}
+
+int
+sql_deadlocked(SQL *sql)
+{
+	return sql->api->deadlocked(sql);
+}
