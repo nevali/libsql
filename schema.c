@@ -84,18 +84,19 @@ sql_migrate_txn_(SQL *sql, void *userdata)
 	{
 		if(strcmp(sql->api->sqlstate(sql), "42S02"))
 		{
-			/* An error occurred */
-			return 1;
+			/* SQLSTATE is not "table does not exist", abort */
+			return -2;
 		}
 		/* Table doesn't exist */
 		v = sql->api->schema_create_table(sql);
 		if(sql->api->deadlocked(sql))
-		{			
+		{		
 			return -1;
 		}
 		if(v)
 		{
-			return 1;
+			/* CREATE TABLE failed */
+			return -2;
 		}
 		v = sql->api->schema_set_version(sql, data->identifier, 0);
 		if(sql->api->deadlocked(sql))
@@ -104,15 +105,18 @@ sql_migrate_txn_(SQL *sql, void *userdata)
 		}
 		if(v)
 		{
-			return 1;
+			/* Inserting/updating the version failed */
+			return 2;
 		}
+		/* Commit */
 		data->current = v;
-		return 0;
+		return 1;
 	}
 	data->current = v;
 	if(data->current == data->target)
 	{
-		return 1;
+		/* Nothing to do */
+		return 0;
 	}
 	v = data->fn(sql, data->identifier, data->current + 1, data->userdata);
 	if(sql->api->deadlocked(sql))
@@ -120,8 +124,9 @@ sql_migrate_txn_(SQL *sql, void *userdata)
 		return -1;
 	}
 	if(v)
-	{		
-		return 1;
+	{
+		/* Migration callback failed */
+		return -2;
 	}
 	v = sql->api->schema_set_version(sql, data->identifier, data->current + 1);
 	if(sql->api->deadlocked(sql))
@@ -130,8 +135,10 @@ sql_migrate_txn_(SQL *sql, void *userdata)
 	}
 	if(v != data->current + 1)
 	{
-		return 1;
+		/* Updating the version failed */
+		return -2;
 	}
+	/* Commit */
 	data->current = v;
-	return 0;
+	return 1;
 }

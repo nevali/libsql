@@ -233,6 +233,47 @@ sql_rollback(SQL *sql)
 	return sql->api->rollback(sql);
 }
 
+/* Repeatedly execute a callback function in the context of a transaction. If
+ * maxretries is less than zero, the callback will be invoked until it
+ * indicates that the loop should end or a SQL error occurs.
+ *
+ * Possible return values from the callback:
+ *
+ *    0      Rollback and return success
+ *   -1      Rollback and retry
+ *   -2      Rollback and abort
+ *    1      Commit
+ *
+ * Note that because a deadlock may not be detected until commit-time,
+ * the callback returning 1 does not guarantee that it won't be invoked again.
+ *
+ * As pseudocode, sql_perform is:
+ *
+ * count := 0
+ * while (maxretries < 0 or count < maxretries)
+     count := count + 1
+ *   BEGIN
+ *   r := invoke callback
+ *   // r == 0: rollback and return success
+ *   if r == 0
+ *     ROLLBACK
+ *     return 0
+ *   end if
+ *   // r == -2: rollback and abort
+ *   if r == -2
+ *     ROLLBACK
+ *     return -1
+ *   end if
+ *   // r == 1: commit
+ *   if r == 1 and a deadlock was not detected
+ *     COMMIT
+ *     if successfully committed
+ *       return 0
+ *     end if
+ *   end if
+ *   ROLLBACK
+ * end while
+ */
 int
 sql_perform(SQL *restrict sql, SQL_PERFORM_TXN fn, void *restrict userdata, int maxretries)
 {
@@ -241,40 +282,27 @@ sql_perform(SQL *restrict sql, SQL_PERFORM_TXN fn, void *restrict userdata, int 
 	count = 0;
 	while(maxretries < 0 || count < maxretries)
 	{
+		count++;
 		if(sql_begin(sql))
 		{
 			return -1;
 		}
-		/* The callback must return zero to attempt to commit */
 		r = fn(sql, userdata);
-		if(!r && sql->api->deadlocked(sql))
+		if(r == 0 || r == -2)
 		{
-			/* A deadlock occurred, re-try */
 			sql_rollback(sql);
-			count++;
-			continue;
+			return (r == 0 ? 0 : -1);
 		}
-		if(r > 0)
+		if(r == 1 && !sql->api->deadlocked(sql))
 		{
-			/* Requested rollback */
-			sql_rollback(sql);
-			return 0;
-		}
-		if(r < 0)
-		{
-			/* An error occurred */
-			sql_rollback(sql);
-			count++;
-			continue;
-		}
-		if(!sql_commit(sql))
-		{
-			/* Successfully commited */
-			return 0;
+			if(!sql_commit(sql))
+			{
+				/* Successfully commited */
+				return 0;
+			}			
 		}
 		/* Try again */
 		sql_rollback(sql);
-		count++;
 	}
 	/* Retry count exceeded */
 	return -1;
