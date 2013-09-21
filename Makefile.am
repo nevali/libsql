@@ -29,7 +29,7 @@ include_HEADERS = libsql.h
 noinst_HEADERS = libsql-engine.h
 
 libsql_la_SOURCES = p_libsql.h \
-	engine.c connect.c error.c statement.c field.c defaults.c vasprintf.c
+	engine.c connect.c error.c statement.c field.c defaults.c vasprintf.c schema.c
 
 libsql_la_LIBADD = @ENGINE_LIBS@ @LOCAL_LIBS@
 EXTRA_libsql_la_DEPENDENCIES = @ENGINE_LIBS@ @LOCAL_LIBS@ 

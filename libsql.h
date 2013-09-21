@@ -24,6 +24,9 @@ typedef struct sql_struct SQL;
 typedef struct sql_statement_struct SQL_STATEMENT;
 typedef struct sql_field_struct SQL_FIELD; 
 typedef int (*SQL_PERFORM_TXN)(SQL *restrict, void *restrict userdata);
+typedef int (*SQL_PERFORM_MIGRATE)(SQL *restrict sql, const char *identifier, int newversion, void *restrict userdata);
+typedef int (*SQL_LOG_QUERY)(SQL *restrict sql, const char *query);
+typedef int (*SQL_LOG_ERROR)(SQL *restrict sql, const char *sqlstate, const char *message);
 
 # if (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L) && !defined(restrict)
 #  define restrict
@@ -40,6 +43,9 @@ extern "C" {
 	int sql_lock(SQL *sql);
 	int sql_unlock(SQL *sql);
 	int sql_trylock(SQL *sql);
+
+	int sql_set_querylog(SQL *sql, SQL_LOG_QUERY fn);
+	int sql_set_errorlog(SQL *sql, SQL_LOG_ERROR fn);
 
 	const char *sql_sqlstate(SQL *connection);
 	const char *sql_error(SQL *connection);
@@ -91,6 +97,9 @@ extern "C" {
 	int sql_deadlocked(SQL *sql);
 	int sql_perform(SQL *restrict sql, SQL_PERFORM_TXN fn, void *restrict userdata, int maxretries);
 	
+	/* Schema migration */
+	int sql_migrate(SQL *restrict sql, const char *restrict identifier, SQL_PERFORM_MIGRATE fn, void *userdata);
+
 # if defined(__cplusplus)
 }
 # endif

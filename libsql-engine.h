@@ -61,6 +61,11 @@ struct sql_api_struct
 	int (*commit)(SQL *me);
 	int (*rollback)(SQL *me);
 	int (*deadlocked)(SQL *me);
+	int (*schema_get_version)(SQL *me, const char *identifier);
+	int (*schema_set_version)(SQL *me, const char *identifier, int version);
+	int (*schema_create_table)(SQL *me);
+	int (*set_querylog)(SQL *me, SQL_LOG_QUERY fn);
+	int (*set_errorlog)(SQL *me, SQL_LOG_ERROR fn);
 };
 
 /* API provided on statements */

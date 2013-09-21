@@ -18,4 +18,4 @@ libmysql_engine_la_CPPFLAGS = @AM_CPPFLAGS@ @MYSQL_CPPFLAGS@
 libmysql_engine_la_LIBADD = @MYSQL_LIBS@
 
 libmysql_engine_la_SOURCES = p_mysql.h \
-	mysql-engine.c mysql-connect.c mysql-query.c mysql-statement.c mysql-field.c
+	mysql-engine.c mysql-connect.c mysql-query.c mysql-statement.c mysql-field.c mysql-schema.c

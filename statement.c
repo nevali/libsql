@@ -253,8 +253,8 @@ sql_perform(SQL *restrict sql, SQL_PERFORM_TXN fn, void *restrict userdata, int 
 			sql_rollback(sql);
 			count++;
 			continue;
-		}	
-		if(r > 1)
+		}
+		if(r > 0)
 		{
 			/* Requested rollback */
 			sql_rollback(sql);

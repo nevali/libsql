@@ -107,3 +107,16 @@ sql_escape(SQL *restrict sql, const unsigned char *restrict from, size_t length,
 	 */
 	return sql->api->escape(sql, from, length, buf, buflen);
 }
+
+/* Set the query-logging function */
+int
+sql_set_querylog(SQL *sql, SQL_LOG_QUERY fn)
+{
+	return sql->api->set_querylog(sql, fn);
+}
+
+int
+sql_set_errorlog(SQL *sql, SQL_LOG_ERROR fn)
+{
+	return sql->api->set_errorlog(sql, fn);
+}

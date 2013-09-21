@@ -49,7 +49,12 @@ static SQL_API mysql_api = {
 	sql_mysql_begin_,
 	sql_mysql_commit_,
 	sql_mysql_rollback_,
-	sql_mysql_deadlocked_
+	sql_mysql_deadlocked_,
+	sql_mysql_schema_get_version_,
+	sql_mysql_schema_set_version_,
+	sql_mysql_schema_create_table_,
+	sql_mysql_set_querylog_,
+	sql_mysql_set_errorlog_
 };
 
 SQL_ENGINE *
@@ -109,6 +114,7 @@ sql_mysql_free_(SQL *me)
 	}
 	pthread_mutex_destroy(&(me->lock));
 	mysql_close(&(me->mysql));
+	free(me->qbuf);
 	free(me);
 	return 0;
 }

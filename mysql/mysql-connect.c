@@ -96,6 +96,10 @@ sql_mysql_set_error_(SQL *restrict me, const char *restrict sqlstate, const char
 		message = sqlstate;
 	}
 	strncpy(me->error, message, sizeof(me->error) - 1);
+	if(me->errorlog)
+	{
+		me->errorlog(me, me->sqlstate, me->error);
+	}
 }
 
 void
@@ -130,4 +134,18 @@ sql_mysql_escape_(SQL *restrict me, const unsigned char *restrict from, size_t l
 		return needed;
 	}
 	return mysql_real_escape_string(&(me->mysql), buf, (const char *) from, length) + 1;
+}
+
+int
+sql_mysql_set_querylog_(SQL *sql, SQL_LOG_QUERY fn)
+{
+	sql->querylog = fn;
+	return 0;
+}
+
+int
+sql_mysql_set_errorlog_(SQL *sql, SQL_LOG_ERROR fn)
+{
+	sql->errorlog = fn;
+	return 0;
 }

@@ -34,6 +34,10 @@ sql_mysql_execute_(SQL *restrict me, const char *restrict statement, void *restr
 		return -1;
 	}
 	me->deadlocked = 0;
+	if(me->querylog)
+	{
+		me->querylog(me, statement);
+	}
 	r = mysql_query(&(me->mysql), statement);
 	if(r)
 	{		
@@ -60,6 +64,7 @@ sql_mysql_execute_(SQL *restrict me, const char *restrict statement, void *restr
 int
 sql_mysql_begin_(SQL *me)
 {
+	const char *st = "START TRANSACTION";
 	int r;
 	
 	if(me->depth)	
@@ -68,7 +73,11 @@ sql_mysql_begin_(SQL *me)
 		sql_mysql_set_error_(me, "25000", "You are not allowed to execute this command in a transaction");
 		return -1;
 	}
-	r = mysql_query(&(me->mysql), "START TRANSACTION");
+	if(me->querylog)
+	{
+		me->querylog(me, st);
+	}
+	r = mysql_query(&(me->mysql), st);
 	if(r)
 	{
 		sql_mysql_copy_error_(me);
@@ -81,6 +90,7 @@ sql_mysql_begin_(SQL *me)
 int
 sql_mysql_commit_(SQL *me)
 {
+	const char *st = "COMMIT";
 	int r;
 	
 	if(!me->depth)
@@ -91,7 +101,11 @@ sql_mysql_commit_(SQL *me)
 	{
 		return -1;
 	}
-	r = mysql_query(&(me->mysql), "COMMIT");
+	if(me->querylog)
+	{
+		me->querylog(me, st);
+	}
+	r = mysql_query(&(me->mysql), st);
 	if(r)
 	{
 		sql_mysql_copy_error_(me);
@@ -104,13 +118,18 @@ sql_mysql_commit_(SQL *me)
 int
 sql_mysql_rollback_(SQL *me)	
 {
+	const char *st = "ROLLBACK";
 	int r;
 	
 	if(!me->depth)
 	{
 		return 0;
 	}
-	r = mysql_query(&(me->mysql), "ROLLBACK");
+	if(me->querylog)
+	{
+		me->querylog(me, st);
+	}
+	r = mysql_query(&(me->mysql), st);
 	if(me->deadlocked)
 	{
 		/* It doesn't matter if the rollback failed */

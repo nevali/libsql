@@ -41,6 +41,10 @@ struct sql_struct
 	char error[512];
 	int depth;
 	int deadlocked;
+	char *qbuf;
+	size_t qbuflen;
+	SQL_LOG_QUERY querylog;
+	SQL_LOG_ERROR errorlog;
 };
 
 struct sql_statement_struct
@@ -103,5 +107,12 @@ int sql_mysql_begin_(SQL *me);
 int sql_mysql_commit_(SQL *me);
 int sql_mysql_rollback_(SQL *me);
 int sql_mysql_deadlocked_(SQL *me);
+
+int sql_mysql_schema_get_version_(SQL *me, const char *identifier);
+int sql_mysql_schema_create_table_(SQL *me);
+int sql_mysql_schema_set_version_(SQL *me, const char *identifier, int version);
+
+int sql_mysql_set_querylog_(SQL *sql, SQL_LOG_QUERY fn);
+int sql_mysql_set_errorlog_(SQL *sql, SQL_LOG_ERROR fn);
 
 #endif /*!P_MYSQL_H_*/
