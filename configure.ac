@@ -12,7 +12,10 @@
 ##  See the License for the specific language governing permissions and
 ##  limitations under the License.
 
-AC_INIT([libsql],[master])
+AC_INIT([libsql],[master],[https://github.com/nevali/libsql/issues],,[https://github.com/nevali/])
+PACKAGE_DESC="SQL client library"
+AC_SUBST([PACKAGE_DESC])
+
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([foreign])
@@ -44,15 +47,20 @@ if test x"$have_mysql" = x"yes" ; then
    engine_mysql="yes"
    ENGINE_SUBDIRS="$ENGINE_SUBDIRS mysql"
    ENGINE_LIBS="$ENGINE_LIBS mysql/libmysql-engine.la"
+   ENGINE_DEPLIBS="$ENGINE_DEPLIBS $MYSQL_LIBS"
 else
 	engine_mysql="no"
 fi
 
 AC_SUBST([ENGINE_LIBS])
 AC_SUBST([ENGINE_SUBDIRS])
+AC_SUBST([ENGINE_DEPLIBS])
 
 AC_CONFIG_FILES([Makefile
+m4/Makefile
 mysql/Makefile
+libsql.pc
+libsql-uninstalled.pc
 ])
 
 AC_OUTPUT

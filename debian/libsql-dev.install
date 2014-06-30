@@ -1,0 +1,5 @@
+usr/lib/libsql.a
+usr/lib/libsql.la
+usr/lib/pkgconfig/libsql.pc
+usr/include/libsql.h
+

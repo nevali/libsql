@@ -18,6 +18,13 @@ DIST_SUBDIRS = m4 libedit mysql
 
 SUBDIRS = @subdirs@ @ENGINE_SUBDIRS@ .
 
+DISTCLEANFILES = libsql.pc libsql-uninstalled.pc
+
+pkgconfigdir = $(libdir)/pkgconfig
+
+pkgconfig_DATA = libsql.pc
+
+
 lib_LTLIBRARIES = libsql.la
 
 bin_PROGRAMS = isql

@@ -1,0 +1,9 @@
+#! /usr/bin/make -f
+# -*- makefile -*-
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	dh_auto_configure -- --without-included-libedit --without-included-liburi
+

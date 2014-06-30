@@ -1,0 +1,21 @@
+Source: libsql
+Section: databases
+Priority: extra
+Maintainer: Mo McRoberts <mo.mcroberts@bbc.co.uk>
+Build-Depends: debhelper (>= 8.0.0), libedit-dev, libmysqlclient-dev, liburi-dev, uuid-dev, pkg-config
+
+Package: libsql
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}, libedit2, libmysqlclient18, liburi, libuuid1
+Description: SQL client library
+
+Package: libsql-dev
+Architecture: any
+Depends: ${misc:Depends}, libsql
+Description: SQL client library (development files)
+
+Package: sql-utils
+Architecture: any
+Depends: ${misc:Depends}, libsql
+Description: SQL client library (command-line utilities)
+

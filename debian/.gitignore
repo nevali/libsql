@@ -1,0 +1,9 @@
+*.substvars
+*.log
+*.debhelper
+/files
+/tmp
+/libsql
+/libsql-dev
+/sql-utils
+
